@@ -68,14 +68,14 @@ const Explore: React.FC = () => {
   };
 
   return (
-    <div className="h-[100vh] px-20 mt-20">
+    <div className=" px-20 mt-20">
       <div className="flex justify-between items-center mb-6">
         <div>
           <div className="flex items-center space-x-4">
             <div className="h-7 w-3 bg-red-500"></div>
-            <div className="text-red-500 font-semibold">Our Products</div>
+            <div className="text-red-500 font-semibold">Featured</div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-semibold mt-4">Explore Our Products</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold mt-4">New Arrival</h1>
         </div>
         <div className="flex space-x-3 text-xl">
           <button className="p-2 bg-gray-200 rounded-full hover:bg-gray-300">
