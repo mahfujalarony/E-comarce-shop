@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
@@ -6,6 +7,7 @@ const Navbar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string>('Home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const handleResize = () => {
     setIsMobile(window.innerWidth < 1024);
@@ -23,12 +25,21 @@ const Navbar: React.FC = () => {
   }, [isMobile]);
 
   const handleMenuSelect = useCallback((item: string) => {
-    setActiveMenu(item);
-    if (isMobile) setSidebarOpen(false);
-  }, [isMobile]);
+  setActiveMenu(item);
+  if (isMobile) setSidebarOpen(false);
+
+  const path = item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '')}`;
+  navigate(path);
+}, [isMobile, navigate]);
+
+
+  // const handleMenuSelect = useCallback((item: string) => {
+  //   setActiveMenu(item);
+  //   if (isMobile) setSidebarOpen(false);
+  // }, [isMobile]);
 
   return (
-    <div className="font-inter mb-32">
+    <div className="font-inter mb-24">
       {/* Fixed Navbar */}
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md px-4 sm:px-10 xl:px-32 h-20 flex justify-between items-center">
         {/* Logo/Menu Button */}

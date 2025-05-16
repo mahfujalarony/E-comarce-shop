@@ -94,23 +94,23 @@ const Feature : React.FC = () => {
         </div>
       </div>
 
-      <div className="flex  flex-col md:flex-row justify-around items-center gap-10 mt-20">
-  <div className="flex flex-col space-y-5 items-center text-center">
-    <FaBabyCarriage className="text-[4rem] md:text-[6rem] border rounded-full p-2" />
-    <h1 className="text-xl md:text-2xl font-semibold">Free And Fast Delivery</h1>
-    <p className="text-base">Free delivery for all orders over $140</p>
-  </div>
-  <div className="flex flex-col space-y-5 items-center text-center">
-    <FaRegClock className="text-[4rem] md:text-[6rem] border rounded-full p-2" />
-    <h1 className="text-xl md:text-2xl font-semibold">24/7 Customer Services</h1>
-    <p className="text-base">Friendly 24/7 Customer Services</p>
-  </div>
-  <div className="flex flex-col space-y-5 items-center text-center">
-    <FaShieldAlt className="text-[4rem] md:text-[6rem] border rounded-full p-2" />
-    <h1 className="text-xl md:text-2xl font-semibold">Money Back Guarantee</h1>
-    <p className="text-base">We return money within 30 days</p>
-  </div>
-</div>
+      <div className="flex flex-col md:flex-row justify-around items-center gap-10 mt-10">
+        <div className="flex flex-col space-y-4 items-center text-center">
+          <FaBabyCarriage className="text-[4rem] md:text-[5rem] border rounded-full p-3 text-indigo-500" />
+          <h1 className="text-xl md:text-2xl font-semibold">Free And Fast Delivery</h1>
+          <p className="text-gray-600">Free delivery for all orders over $140</p>
+        </div>
+        <div className="flex flex-col space-y-4 items-center text-center">
+          <FaRegClock className="text-[4rem] md:text-[5rem] border rounded-full p-3 text-yellow-500" />
+          <h1 className="text-xl md:text-2xl font-semibold">24/7 Customer Services</h1>
+          <p className="text-gray-600">Friendly 24/7 Customer Services</p>
+        </div>
+        <div className="flex flex-col space-y-4 items-center text-center">
+          <FaShieldAlt className="text-[4rem] md:text-[5rem] border rounded-full p-3 text-green-500" />
+          <h1 className="text-xl md:text-2xl font-semibold">Money Back Guarantee</h1>
+          <p className="text-gray-600">We return money within 30 days</p>
+        </div>
+      </div>
 
 
       {/* <div className='flex justify-around items-center'>
