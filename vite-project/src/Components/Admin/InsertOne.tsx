@@ -11,7 +11,7 @@ interface FormData {
   reviews: number;
   size: string;
   images: File[];
-  discount: number;
+  //discount: number;
   category: string;
   inStock: boolean;
 }
@@ -26,7 +26,7 @@ const InsertOne: React.FC = () => {
     reviews: 0,
     size: 'M',
     images: [],
-    discount: 0,
+ //   discount: 0,
     category: '',
     inStock: true,
   });
@@ -34,6 +34,26 @@ const InsertOne: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+   //const categories = ['clothing', 'electronics', 'beauty', 'furniture', 'books'];
+
+   const categories = [
+  "electronics",
+  "clothing & fashion",
+  "home & kitchen",
+  "beauty & health",
+  "groceries",
+  "sports & outdoors",
+  "toys & games",
+  "automotive",
+  "books & stationery",
+  "furniture",
+  "mobiles & tablets",
+  "computers & laptops",
+  "watches & accessories",
+  "baby products",
+  "pet supplies"
+];
 
   // Handle input changes
   const handleChange = (
@@ -140,7 +160,7 @@ const InsertOne: React.FC = () => {
         reviews: 0,
         size: 'M',
         images: [],
-        discount: 0,
+      //  discount: 0,
         category: '',
         inStock: true,
       });
@@ -306,24 +326,9 @@ const InsertOne: React.FC = () => {
           )}
         </div>
 
-        {/* Discount */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Discount (%)
-          </label>
-          <input
-            type="number"
-            name="discount"
-            value={formData.discount}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md"
-            min="0"
-            max="100"
-          />
-        </div>
 
         {/* Category */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700">
             Category
           </label>
@@ -335,7 +340,23 @@ const InsertOne: React.FC = () => {
             className="mt-1 block w-full p-2 border rounded-md"
             required
           />
-        </div>
+        </div> */}
+
+       
+
+<select
+  name="category"
+  value={formData.category}
+  onChange={handleChange}
+  className="mt-1 block w-full p-2 border rounded-md"
+  required
+>
+  <option value="">Select a category</option>
+  {categories.map((cat) => (
+    <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+  ))}
+</select>
+
 
         {/* In Stock */}
         <div>

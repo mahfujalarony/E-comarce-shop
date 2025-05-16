@@ -1,221 +1,255 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FaChevronRight } from 'react-icons/fa';
 
-// const images = [
-//   "/figma/b.jpg",
-//   "/figma/c.jpg",
-//   "/figma/d.jpg",
-//   "/figma/a.jpg",
-// ];
-const images = [
-  "/figma/a.jpg",
-];
+const images = ['/figma/xa (2).jpg', '/figma/xa (3).jpg'];
+
+const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
+const categories = [
+  'Electronics',
+  'Home & LifeStyle',
+  'Medicine',
+  'Sports & Outdoor',
+  "Baby's & Toys",
+  'Groceries & Pets',
+  'Health & Beauty',
+] as const;
+
+const subMenus = {
+  woman: [
+    { id: 'women1', label: "Elegant Women's Fashion Collection" },
+    { id: 'women2', label: 'Modern & Traditional Outfits for Women' },
+    { id: 'women3', label: 'Timeless Styles Sarees, Gowns & More' },
+  ],
+  man: [
+    { id: 'men1', label: "Classic & Contemporary Men's Wear" },
+    { id: 'men2', label: 'Smart Casuals to Formal Perfection' },
+    { id: 'men3', label: "Modern Men's Fashion Essentials" },
+  ],
+};
 
 const Navbar: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [active, setActive] = useState('Home');
+  const [activeMenu, setActiveMenu] = useState<string>('Home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  console.log('Selected Catagory is', selectedCategory);
 
-  const menuItems = ['Home', 'Contact', 'About', 'Sign Up'];
+  // Memoize frequently used values
+  const isMobile = useMemo(() => window.innerWidth < 1024, []);
 
+  // Optimize handlers with useCallback
+  const toggleMenu = useCallback((menuName: string) => {
+    setOpenMenu((prev) => (prev === menuName ? null : menuName));
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    if (isMobile) {
+      setSidebarOpen((prev) => !prev);
+    }
+  }, [isMobile]);
+
+  const handleCategorySelect = useCallback((category: string) => {
+    setSelectedCategory(category);
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
+
+  const handleMenuSelect = useCallback((item: string) => {
+    setActiveMenu(item);
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
+
+  // Image slider effect
   useEffect(() => {
+    if (images.length <= 1) return; // Skip if only one image
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
+      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
     }, 6000);
-
     return () => clearInterval(interval);
   }, []);
 
-  const toggleMenu = (menuName: string) => {
-    setOpenMenu(openMenu === menuName ? null : menuName);
-  };
-
-  const toggleSidebar = () => {
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(!sidebarOpen);
-    }
-  };
-
-  const handleCategorySelect = (categoryName: string) => {
-  setSelectedCategory(categoryName);
-  };
-
+  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setSidebarOpen(false);
       }
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
-    <div className='flex px-10 xl:px-32 flex-col font-inter'>
-      <div className='flex justify-between items-center bg-white h-20'>
+    <div className="flex flex-col px-4 sm:px-10 xl:px-32 font-inter">
+      {/* Header */}
+      <header className="flex justify-between items-center bg-white h-20">
         <div className="relative">
-          <h1
+          <button
+            type="button"
+            aria-label="Toggle menu"
             className="font-bold text-2xl cursor-pointer hover:text-red-500 transition-colors duration-300"
             onClick={toggleSidebar}
           >
             Exclusive
-          </h1>
+          </button>
 
           {/* Sidebar for mobile */}
-          <div
-            className={`${
+          <nav
+            className={`fixed top-0 left-0 w-64 h-full bg-white p-5 z-50 lg:hidden transition-transform duration-300 ease-in-out ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-            } transition-transform duration-300 ease-in-out fixed top-0 left-0 w-64 h-full bg-white p-5 z-50 lg:hidden`}
+            }`}
+            aria-hidden={!sidebarOpen}
           >
             <ul className="flex flex-col text-xl text-[#808080] space-y-5">
               {menuItems.map((item) => (
                 <li
                   key={item}
                   className={`cursor-pointer pb-2 transition-all hover:text-black hover:font-semibold ${
-                    active === item ? 'text-black font-semibold' : ''
+                    activeMenu === item ? 'text-black font-semibold' : ''
                   }`}
-                  onClick={() => {
-                    setActive(item);
-                    setSidebarOpen(false);
-                  }}
+                  onClick={() => handleMenuSelect(item)}
                 >
-                  {item}
-                  {active === item && (
-                    <div className="w-full h-[3px] bg-red-500 rounded-full mt-1"></div>
-                  )}
+                  <button
+                    type="button"
+                    className="w-full text-left"
+                    aria-current={activeMenu === item ? 'page' : undefined}
+                  >
+                    {item}
+                    {activeMenu === item && (
+ <div className="w-full h-[3px] bg-red-500 rounded-full mt-1" />
+                    )}
+                  </button>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
-          {/* Background overlay */}
+          {/* Overlay */}
           {sidebarOpen && (
             <div
               className="fixed inset-0 bg-black opacity-50 z-40 lg:hidden"
               onClick={toggleSidebar}
-            ></div>
+              role="button"
+              aria-label="Close sidebar"
+            />
           )}
         </div>
-      
-        <div className='hidden lg:flex'>
-          <ul className="flex text-xl text-[#808080] space-x-5 xl:space-x-10 relative">
+
+        {/* Desktop Menu */}
+        <nav className="hidden lg:flex" aria-label="Main navigation">
+          <ul className="flex text-xl text-[#808080] space-x-5 xl:space-x-10">
             {menuItems.map((item) => (
               <li
                 key={item}
                 className={`cursor-pointer pb-2 transition-all hover:text-black hover:font-semibold ${
-                  active === item ? 'text-black font-semibold' : ''
+                  activeMenu === item ? 'text-black font-semibold' : ''
                 }`}
-                onClick={() => setActive(item)}
               >
-                {item}
-                {active === item && (
-                  <div className="w-full h-[3px] bg-red-500 rounded-full mt-1"></div>
+                <button
+                  type="button"
+                  onClick={() => handleMenuSelect(item)}
+                  aria-current={activeMenu === item ? 'page' : undefined}
+                >
+                  {item}
+                  {activeMenu === item && (
+                    <div className="w-full h-[3px] bg-red-500 rounded-full mt-1" />
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Search and Icons */}
+        <div className="flex gap-3 sm:gap-5 items-center">
+          <div className="relative w-full max-w-xs sm:max-w-sm hover:shadow-md transition-shadow duration-300">
+            <input
+              type="search"
+              placeholder="What are you looking for?"
+              className="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-colors duration-300"
+              aria-label="Search products"
+            />
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-300">
+              🔍
+            </span>
+          </div>
+          <button type="button" aria-label="Wishlist">
+            <img
+              src="/figma/Vector.svg"
+              alt="Wishlist"
+              className="hover:scale-110 transition-transform duration-300 cursor-pointer w-6 h-6"
+            />
+          </button>
+          <button type="button" aria-label="Cart">
+            <img
+              src="/figma/Cart1.svg"
+              alt="Cart"
+              className="hover:scale-110 transition-transform duration-300 cursor-pointer w-6 h-6"
+            />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex flex-col-reverse lg:flex-row w-full mt-8 gap-4">
+        {/* Sidebar Categories */}
+        <aside className="w-full lg:w-1/3 p-4" aria-label="Categories">
+          <ul className="flex flex-col space-y-2 text -ml-2">
+            {(['woman', 'man'] as const).map((menu) => (
+              <li
+                key={menu}
+                className="hover:bg-gray-100 rounded-md p-2 transition-colors duration-300"
+              >
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full cursor-pointer"
+                  onClick={() => toggleMenu(menu)}
+                  aria-expanded={openMenu === menu}
+                >
+                  <span>{menu === 'woman' ? "Women's Fashion" : "Men's Fashion"}</span>
+                  <FaChevronRight
+                    className={`transition-transform duration-300 ${
+                      openMenu === menu ? 'rotate-90' : ''
+                    }`}
+                  />
+                </button>
+                {openMenu === menu && (
+                  <ul className="pl-4 mt-1 ml-20 text-sm space-y-1">
+                    {subMenus[menu].map(({ id, label }) => (
+                      <li
+                        key={id}
+                        className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer"
+                        onClick={() => handleCategorySelect(id)}
+                      >
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             ))}
-          </ul>
-        </div>
-        
-        <div className='flex gap-5 items-center'>
-          <div className="relative w-full max-w-sm hover:shadow-md transition-shadow duration-300">
-            <input
-              type="text"
-              placeholder="What are you looking for?"
-              className="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-colors duration-300"
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none hover:text-gray-600 transition-colors duration-300">
-              🔍
-            </div>
-          </div>
-          <img 
-            src="/figma/Vector.svg" 
-            alt="love" 
-            className="hover:scale-110 transition-transform duration-300 cursor-pointer" 
-          />
-          <img 
-            src="/figma/Cart1.svg" 
-            alt="cart1" 
-            className="hover:scale-110 transition-transform duration-300 cursor-pointer" 
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col-reverse lg:flex-row w-full mt-8">
-        {/* Left sidebar - 1/3 width */}
-        <div className="w-full lg:w-1/3 p-4">
-          <ul className="flex text-xl flex-col space-y-2">
-            <li className="hover:bg-gray-100 rounded-md p-2 transition-colors duration-300">
-              <div
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => toggleMenu('woman')}
-              >
-                <span>Woman's Fashion</span>
-                <FaChevronRight
-                  className={`transition-transform duration-300 ${
-                    openMenu === 'woman' ? 'rotate-90' : ''
-                  }`}
-                />
-              </div>
-              {openMenu === 'woman' && (
-                <ul className="pl-4 mt-1 ml-20 text-sm  space-y-1">
-                  <li className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer" onClick={() => setSelectedCategory('women1')}>Elegant Women's Fashion Collection</li>
-                  <li className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer" onClick={() => setSelectedCategory('women2')}>Modern & Traditional Outfits for Women</li>
-                  <li className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer" onClick={() => setSelectedCategory('women3')}>Timeless Styles Sarees, Gowns & More</li>
-                </ul>
-              )}
-            </li>
-
-            <li className="hover:bg-gray-100 rounded-md p-2 transition-colors duration-300">
-              <div
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => toggleMenu('man')}
-              >
-                <span>Men's Fashion</span>
-                <FaChevronRight
-                  className={`transition-transform duration-300 ${
-                    openMenu === 'man' ? 'rotate-90' : ''
-                  }`}
-                />
-              </div>
-              {openMenu === 'man' && (
-                <ul className="pl-4 mt-1 ml-20 text-sm  space-y-1">
-                  <li className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer" onClick={() => setSelectedCategory('men1')}>Classic & Contemporary Men's Wear</li>
-                  <li className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer" onClick={() => setSelectedCategory('men2')}>Smart Casuals to Formal Perfection</li>
-                  <li className="hover:text-black hover:font-medium transition-colors duration-300 p-1 cursor-pointer" onClick={() => setSelectedCategory('men3')}>Modern Men's Fashion Essentials</li>
-                </ul>
-              )}
-            </li>
-
-            {['Electronics', 'Home & LifeStyle', 'Medicine', 'Sports & Outdoor', 'Baby\'s & Toys', 'Groceries & Pets', 'Health & Beauty'].map((item) => (
-              <li 
+            {categories.map((item) => (
+              <li
                 key={item}
-                onClick={() => handleCategorySelect(item)}
                 className="hover:bg-gray-100 rounded-md p-2 transition-colors duration-300 cursor-pointer"
+                onClick={() => handleCategorySelect(item)}
               >
                 {item}
               </li>
             ))}
           </ul>
-        </div>
-      
-        {/* Image slider - 2/3 width */}
+        </aside>
+
+        {/* Image Slider */}
         <div className="relative w-full h-[400px] overflow-hidden hover:shadow-lg transition-shadow duration-300">
           {images.map((img, index) => (
             <img
-              key={index}
+              key={img}
               src={img}
-              alt={`Slide ${index}`}
-              className={`
-                absolute top-0 left-0 w-full h-full object-fill
-                transition-opacity duration-700 ease-in-out
-                ${currentIndex === index ? 'opacity-100 z-10' : 'opacity-0 z-0'}
-              `}
+              alt={`Slide ${index + 1}`}
+              className={`absolute top-0 left-0 w-full h-full object-fill transition-opacity duration-700 ease-in-out ${
+                currentIndex === index ? 'opacity-100 z-10' : 'opacity-0 z-0'
+              }`}
+              loading={index === 0 ? 'eager' : 'lazy'}
             />
           ))}
         </div>
