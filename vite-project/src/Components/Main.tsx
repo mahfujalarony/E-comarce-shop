@@ -6,11 +6,14 @@ import BestSelling from './BestSelling'
 import Explore from './Explore'
 import Feature from './Feature'
 import Footer from './Footer'
+import Body from './Body'
 
 const Main: React.FC = () => {
   return (
     <div>
       <Navbar />
+
+      <Body />
       <Fetch />
       <BrowseCategory />
       <BestSelling />

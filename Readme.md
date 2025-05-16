@@ -1,2 +1,1 @@
-# This online e-commerce site is fully operational and running smoothly.
-# It offers secure payment options and real-time order tracking
+# This project is currently in development phase. The site is not live yet, but core features are being implemented.
