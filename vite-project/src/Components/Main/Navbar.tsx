@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MdAccountCircle } from "react-icons/md";
 
 const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
@@ -7,6 +8,7 @@ const Navbar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string>('Home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [avatarOpen, setAvatarOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleResize = () => {
@@ -20,23 +22,42 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  }, [sidebarOpen]);
+
   const toggleSidebar = useCallback(() => {
     if (isMobile) setSidebarOpen((prev) => !prev);
   }, [isMobile]);
 
   const handleMenuSelect = useCallback((item: string) => {
-  setActiveMenu(item);
-  if (isMobile) setSidebarOpen(false);
+    setActiveMenu(item);
+    if (isMobile) setSidebarOpen(false);
+    const path = item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '')}`;
+    navigate(path);
+  }, [isMobile, navigate]);
 
-  const path = item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '')}`;
-  navigate(path);
-}, [isMobile, navigate]);
+  const toggleAvatar = () => {
+    setAvatarOpen((prev) => !prev);
+  };
 
+  const handleOutsideClick = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest("#avatar-menu")) {
+      setAvatarOpen(false);
+    }
+  }, []);
 
-  // const handleMenuSelect = useCallback((item: string) => {
-  //   setActiveMenu(item);
-  //   if (isMobile) setSidebarOpen(false);
-  // }, [isMobile]);
+  useEffect(() => {
+    document.addEventListener("click", handleOutsideClick);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [handleOutsideClick]);
 
   return (
     <div className="font-inter mb-24">
@@ -77,7 +98,7 @@ const Navbar: React.FC = () => {
 
         {/* Right Icons */}
         <div className="flex gap-3 sm:gap-5 items-center">
-          <div className="relative w-full max-w-xs sm:max-w-sm hover:shadow-md transition-shadow duration-300">
+          <div className="relative w-full max-w-[180px] sm:max-w-sm hidden sm:block hover:shadow-md transition-shadow duration-300">
             <input
               type="search"
               placeholder="What are you looking for?"
@@ -87,12 +108,31 @@ const Navbar: React.FC = () => {
               🔍
             </span>
           </div>
+
           <button type="button">
             <img src="/figma/Vector.svg" alt="Wishlist" className="w-6 h-6 hover:scale-110 transition-transform" />
           </button>
+
           <button type="button">
             <img src="/figma/Cart1.svg" alt="Cart" className="w-6 h-6 hover:scale-110 transition-transform" />
           </button>
+
+          {/* Avatar Dropdown */}
+          <div className="relative" id="avatar-menu">
+            <MdAccountCircle
+              className="text-3xl cursor-pointer hover:text-blue-600"
+              onClick={toggleAvatar}
+            />
+            {avatarOpen && (
+              <ul className="absolute top-10 right-0 bg-white border rounded-md shadow-lg w-48 z-50 text-sm text-gray-700">
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Manage My Account</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Orders</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Collections</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Reviews</li>
+                <li className="px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer">Logout</li>
+              </ul>
+            )}
+          </div>
         </div>
       </header>
 
