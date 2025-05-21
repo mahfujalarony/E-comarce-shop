@@ -14,6 +14,7 @@ import { AuthProvider } from "./Components/auth/AuthContext.tsx";
 import Step1 from "./Components/auth/Step1.tsx";
 import Step2 from "./Components/auth/Step2.tsx";
 import Step3 from "./Components/auth/Step3.tsx";
+import ForgotPassword from "./Components/auth/ForgotPassword.tsx";
 
 function App() {
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="/step2" element={<Step2 />} />
           <Route path="/step3" element={<Step3 />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/details/:id" element={<ProductDetails />} />
           <Route path="/contact" element={<Contact />} />

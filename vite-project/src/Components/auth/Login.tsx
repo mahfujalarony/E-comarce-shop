@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AxiosError } from "axios";
 import { useAuth } from "../auth/AuthContext";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "./firebase";
 
 const Login: React.FC = () => {
   const { setAuthData } = useAuth();
@@ -11,9 +13,9 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Clear success message after 5 seconds
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(""), 5000);
@@ -56,6 +58,39 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    setError("");
+    setSuccessMessage("");
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const res = await axios.post("http://localhost:3001/api/google", {
+        name: user.displayName,
+        email: user.email,
+        imgUrl: user.photoURL,
+      });
+
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      setAuthData({
+        email: user.email,
+        isAuthenticated: true,
+        name: user.displayName,
+        imgUrl: user.photoURL,
+      });
+      setSuccessMessage("Login Successful with Google!");
+      navigate("/");
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      setError(err.response?.data?.message || "Google Sign-In Failed. Please try again.");
+      console.error("Google Sign-In Error", error);
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="flex w-full max-w-4xl bg-white shadow-lg rounded-lg overflow-hidden">
@@ -63,7 +98,7 @@ const Login: React.FC = () => {
         <div className="w-1/2 hidden md:block bg-blue-100">
           <img
             src="/others/log.svg"
-            alt="login illustration"
+            alt="Login Illustration"
             className="w-full h-full object-cover"
           />
         </div>
@@ -131,9 +166,17 @@ const Login: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                {/* <Link 
+                  to="/forgotpassword" 
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Forgot password?
+                </Link> */}
+              </div>
               <input
                 type="password"
                 id="password"
@@ -144,6 +187,13 @@ const Login: React.FC = () => {
                 required
               />
             </div>
+
+                            <Link 
+                  to="/forgotpassword" 
+                  className="text-sm  mt-5 text-blue-500 hover:underline"
+                >
+                  Forgot password?
+                </Link>
 
             <button
               type="submit"
@@ -162,15 +212,19 @@ const Login: React.FC = () => {
             </div>
 
             <button
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading}
               type="button"
-              className="w-full flex items-center justify-center gap-2 border py-2 rounded hover:bg-gray-100"
+              className={`w-full flex items-center justify-center gap-2 border py-2 rounded ${
+                isGoogleLoading ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-100"
+              }`}
             >
               <img
                 src="https://cdn-icons-png.flaticon.com/512/281/281764.png"
-                alt="Google icon"
+                alt="Google logo"
                 className="w-5 h-5"
               />
-              Log in with Google
+              {isGoogleLoading ? "Signing in..." : "Log in with Google"}
             </button>
           </form>
 

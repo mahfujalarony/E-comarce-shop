@@ -6,14 +6,16 @@ import { AxiosError } from "axios";
 
 const Step3: React.FC = () => {
   const { authData, setAuthData } = useAuth();
-  const [newEmail, setNewEmail] = useState(authData.email);
-  const [token, setToken] = useState("");
+  // newEmail এর টাইপ string হবে এবং null এর জন্য ফলব্যাক হিসেবে empty string
+  const [newEmail, setNewEmail] = useState<string>(authData.email ?? "");
+  const [token, setToken] = useState<string>("");
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [showEmailInput, setShowEmailInput] = useState(false);
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
   // Countdown timer for resend email
@@ -34,11 +36,10 @@ const Step3: React.FC = () => {
 
   // Navigate when authData.isAuthenticated changes to true
   useEffect(() => {
-    if (authData.isAuthenticated) {
-      alert('already login');
+    if (success) {
       navigate("/");
     }
-  }, [authData.isAuthenticated, navigate]);
+  }, [success, navigate]);
 
   const sendVerificationEmail = async () => {
     if (!newEmail) {
@@ -49,7 +50,7 @@ const Step3: React.FC = () => {
     setIsLoading(true);
     setError("");
     setSuccessMessage("");
-    
+
     try {
       await axios.post("http://localhost:3001/api/send-otp", {
         email: newEmail,
@@ -87,23 +88,27 @@ const Step3: React.FC = () => {
       const response = await axios.post("http://localhost:3001/api/verify-otp-and-register", {
         email: newEmail,
         token,
-        name: authData.name,
-        password: authData.password,
-        imgUrl: authData.imgUrl,
+        name: authData.name ?? "", // null ফলব্যাক
+        password: authData.password ?? "", // null ফলব্যাক
+        imgUrl: authData.imgUrl ?? "", // null ফলব্যাক
       });
 
-      console.log("API Response:", response.data); // Debugging API response
+      console.log("API Response:", response.data);
 
       if (response.data.success) {
         setSuccessMessage(response.data.message || "Registration successful!");
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
-        
+
         setAuthData({
           ...authData,
           isAuthenticated: true,
           email: newEmail,
+          name: response.data.user.name ?? "", // null ফলব্যাক
+          imgUrl: response.data.user.imgUrl ?? "", // null ফলব্যাক
         });
+
+        setSuccess(true);
       } else {
         setError(response.data.message || "Registration failed. Please try again.");
       }
@@ -198,7 +203,7 @@ const Step3: React.FC = () => {
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              <span className="font-medium text-blue-800">{authData.email}</span>
+              <span className="font-medium text-blue-800">{authData.email ?? "No email provided"}</span>
             </div>
             <button
               onClick={() => setShowEmailInput(true)}
@@ -217,7 +222,7 @@ const Step3: React.FC = () => {
                 <input
                   type="email"
                   id="email"
-                  value={newEmail}
+                  value={newEmail} // এখানে newEmail সবসময় string হবে
                   onChange={(e) => setNewEmail(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter new email"
@@ -227,7 +232,7 @@ const Step3: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowEmailInput(false);
-                    setNewEmail(authData.email);
+                    setNewEmail(authData.email ?? "");
                   }}
                   className="flex-1 py-2 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
                 >

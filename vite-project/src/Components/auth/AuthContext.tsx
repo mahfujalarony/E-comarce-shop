@@ -1,10 +1,10 @@
 import React, {useEffect,  createContext, useContext, useState } from "react";
 
 interface AuthData {
-  name: string;
-  email: string;
+  name: string | null;
+  email: string | null;
   password?: string;
-  imgUrl?: string;
+  imgUrl?: string | null;
   isAuthenticated: boolean;
 }
 
