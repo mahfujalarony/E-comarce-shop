@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccountCircle } from "react-icons/md";
+import { useAuth } from '../auth/AuthContext';
 
 const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
@@ -10,6 +11,7 @@ const Navbar: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [avatarOpen, setAvatarOpen] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { authData } = useAuth();
 
   const handleResize = () => {
     setIsMobile(window.innerWidth < 1024);
@@ -118,17 +120,23 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Avatar Dropdown */}
-          <div className="relative" id="avatar-menu">
-            <MdAccountCircle
-              className="text-3xl cursor-pointer hover:text-blue-600"
-              onClick={toggleAvatar}
-            />
+          <div className="relative" onClick={toggleAvatar} id="avatar-menu">
+            {authData.imgUrl ? (
+              <img src={authData.imgUrl} alt="User Avatar" className="w-12 h-12 rounded-full" />
+            ) : (
+              <MdAccountCircle className="text-3xl cursor-pointer hover:text-blue-600"  />
+            )}
+
+            
             {avatarOpen && (
               <ul className="absolute top-10 right-0 bg-white border rounded-md shadow-lg w-48 z-50 text-sm text-gray-700">
                 <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Manage My Account</li>
                 <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Orders</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Collections</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Reviews</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Wishlist</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Payment Methods</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Order Returns & Refunds</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Refer a Friend</li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Help / Support Center</li>
                 <li className="px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer">Logout</li>
               </ul>
             )}

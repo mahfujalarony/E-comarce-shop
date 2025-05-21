@@ -4,10 +4,13 @@ import './index.css'
 import App from './App.tsx'
 // @ts-ignore
 import '@fontsource/inter';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={new QueryClient()}>
+      <App />
+    </QueryClientProvider>
   </StrictMode>,
 )

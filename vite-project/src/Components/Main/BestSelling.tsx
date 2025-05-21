@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { GoArrowRight } from 'react-icons/go';
+import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-// Product Interface
 interface Product {
   _id: string;
   name: string;
@@ -14,47 +15,40 @@ interface Product {
   reviews?: number;
 }
 
-const BestSelling: React.FC = () => {
-  const [horizontalProducts, setHorizontalProducts] = useState<Product[]>([]);
-  const [horizontalOffset, setHorizontalOffset] = useState(0);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+const queryClient = new QueryClient();
 
+const API_URL = 'http://localhost:3001/api/products';
+
+const BestSellingComponent: React.FC = () => {
+  const navigate = useNavigate();
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_URL = 'http://localhost:3001/api/products';
+  // Horizontal Products Query
+  const {
+    data: horizontalProducts = [],
+    fetchNextPage: fetchMoreHorizontal,
+    hasNextPage: hasMoreHorizontal,
+    isFetchingNextPage: horizontalLoading,
+    isLoading: horizontalInitialLoading,
+    error: horizontalError,
+  } = useInfiniteQuery({
+    queryKey: ['bestSellingHorizontal'],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await axios.get(`${API_URL}?limit=5&offset=${pageParam}`);
+      return response.data;
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length ? allPages.length * 5 : undefined;
+    },
+  });
 
-  useEffect(() => {
-    const fetchInitialProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_URL}?limit=5&offset=0`);
-        setHorizontalProducts(response.data);
-        setLoading(false);
-      } catch (error) {
-        setError('Failed to load products.');
-        setLoading(false);
-      }
-    };
-    fetchInitialProducts();
-  }, [API_URL]);
+  const flattenedHorizontalProducts = horizontalProducts.pages?.flat() || [];
 
   const loadMoreHorizontal = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${API_URL}?limit=20&offset=${horizontalOffset + 5}`
-      );
-      setHorizontalProducts([...horizontalProducts, ...response.data]);
-      setHorizontalOffset(horizontalOffset + 20);
-      setLoading(false);
-
-      if (horizontalContainerRef.current) {
-        horizontalContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-      }
-    } catch (error) {
-      setError('Failed to load more products!');
-      setLoading(false);
+    await fetchMoreHorizontal();
+    if (horizontalContainerRef.current) {
+      horizontalContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
     }
   };
 
@@ -62,8 +56,16 @@ const BestSelling: React.FC = () => {
     loadMoreHorizontal();
   };
 
-  if (error) {
-    return <div className="text-center py-10 text-red-500">{error}</div>;
+  const handleProductClick = (productId: string) => {
+    navigate(`/details/${productId}`);
+  };
+
+  if (horizontalInitialLoading) {
+    return <div className="text-center py-10">Loading best selling products...</div>;
+  }
+
+  if (horizontalError) {
+    return <div className="text-center py-10 text-red-500">Error loading products</div>;
   }
 
   return (
@@ -82,8 +84,9 @@ const BestSelling: React.FC = () => {
         <button
           onClick={handleViewMore}
           className="mt-6 sm:mt-0 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          disabled={horizontalLoading}
         >
-          View More
+          {horizontalLoading ? 'Loading...' : 'View More'}
         </button>
       </div>
 
@@ -94,7 +97,7 @@ const BestSelling: React.FC = () => {
           <button
             onClick={loadMoreHorizontal}
             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
-            disabled={loading}
+            disabled={horizontalLoading}
           >
             <GoArrowRight size={24} />
           </button>
@@ -104,10 +107,11 @@ const BestSelling: React.FC = () => {
           ref={horizontalContainerRef}
           className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-300"
         >
-          {horizontalProducts.map((product) => (
+          {flattenedHorizontalProducts.map((product) => (
             <div
               key={product._id}
-              className="relative w-56 h-72 border rounded-lg flex-shrink-0 bg-white"
+              onClick={() => handleProductClick(product._id)}
+              className="relative w-56 h-72 border rounded-lg flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow"
             >
               <img
                 src={product.images[0]}
@@ -142,53 +146,55 @@ const BestSelling: React.FC = () => {
           ))}
         </div>
 
-        {loading && <div className="text-center py-4">Loading...</div>}
+        {horizontalLoading && <div className="text-center py-4">Loading more products...</div>}
       </div>
 
-<div className="bg-black flex flex-col-reverse md:flex-row h-auto md:h-[100vh]">
-  {/* Text section */}
-  <div className="text-white flex-1 space-y-8 flex flex-col justify-center items-start px-6 md:px-10 py-10 md:py-0">
-    <p className="text-[#00FF66] text-sm md:text-base">Categories</p>
-    <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-semibold leading-snug">
-      Enhance Your <br /> Music Experience
-    </h1>
+      <div className="bg-black flex flex-col-reverse md:flex-row h-auto md:h-[100vh]">
+        {/* Text section */}
+        <div className="text-white flex-1 space-y-8 flex flex-col justify-center items-start px-6 md:px-10 py-10 md:py-0">
+          <p className="text-[#00FF66] text-sm md:text-base">Categories</p>
+          <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-semibold leading-snug">
+            Enhance Your <br /> Music Experience
+          </h1>
 
-    {/* Countdown */}
-    <div className="flex flex-wrap gap-4 md:space-x-6">
-      {[
-        { value: "23", label: "Hours" },
-        { value: "05", label: "Days" },
-        { value: "59", label: "Minutes" },
-        { value: "35", label: "Seconds" },
-      ].map((item, index) => (
-        <div
-          key={index}
-          className="h-20 w-20 flex flex-col justify-center items-center font-semibold bg-white text-black rounded-full"
-        >
-          <p className="text-lg">{item.value}</p>
-          <p className="text-sm">{item.label}</p>
+          {/* Countdown */}
+          <div className="flex flex-wrap gap-4 md:space-x-6">
+            {[
+              { value: "23", label: "Hours" },
+              { value: "05", label: "Days" },
+              { value: "59", label: "Minutes" },
+              { value: "35", label: "Seconds" },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="h-20 w-20 flex flex-col justify-center items-center font-semibold bg-white text-black rounded-full"
+              >
+                <p className="text-lg">{item.value}</p>
+                <p className="text-sm">{item.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Button */}
+          <button className="bg-[#00FF66] text-black w-32 md:w-36 h-12 md:h-16 rounded-md hover:scale-95 transition duration-200 flex justify-center items-center">
+            Buy Now
+          </button>
         </div>
-      ))}
-    </div>
 
-    {/* Button */}
-    <button className="bg-[#00FF66] text-black w-32 md:w-36 h-12 md:h-16 rounded-md hover:scale-95 transition duration-200 flex justify-center items-center">
-      Buy Now
-    </button>
-  </div>
-
-  {/* Image section */}
-  <div
-    className="flex-1 bg-no-repeat bg-center bg-contain h-[300px] md:h-auto"
-    style={{ backgroundImage: "url(/figma/hadphone.svg)" }}
-  ></div>
-</div>
-
-
-
-
+        {/* Image section */}
+        <div
+          className="flex-1 bg-no-repeat bg-center bg-contain h-[300px] md:h-auto"
+          style={{ backgroundImage: "url(/figma/hadphone.svg)" }}
+        ></div>
+      </div>
     </div>
   );
 };
+
+const BestSelling = () => (
+  <QueryClientProvider client={queryClient}>
+    <BestSellingComponent />
+  </QueryClientProvider>
+);
 
 export default BestSelling;
