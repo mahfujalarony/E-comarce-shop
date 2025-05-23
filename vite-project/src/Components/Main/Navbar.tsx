@@ -13,23 +13,19 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { authData } = useAuth();
 
-  const handleResize = () => {
+  const handleResize = useCallback(() => {
     setIsMobile(window.innerWidth < 1024);
     if (window.innerWidth >= 1024) setSidebarOpen(false);
-  };
-
-  useEffect(() => {
-    handleResize(); // initial
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
+
+  useEffect(() => {
+    document.body.style.overflow = sidebarOpen ? 'hidden' : 'auto';
   }, [sidebarOpen]);
 
   const toggleSidebar = useCallback(() => {
@@ -43,22 +39,28 @@ const Navbar: React.FC = () => {
     navigate(path);
   }, [isMobile, navigate]);
 
-  const toggleAvatar = () => {
+  const toggleAvatar = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     setAvatarOpen((prev) => !prev);
-  };
+  }, []);
 
   const handleOutsideClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!target.closest("#avatar-menu")) {
+    const avatarMenu = document.getElementById("avatar-menu");
+    if (avatarMenu && !avatarMenu.contains(target)) {
       setAvatarOpen(false);
     }
   }, []);
 
+  const handleDropdownItemClick = useCallback((path: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAvatarOpen(false);
+    navigate(path);
+  }, [navigate]);
+
   useEffect(() => {
     document.addEventListener("click", handleOutsideClick);
-    return () => {
-      document.removeEventListener("click", handleOutsideClick);
-    };
+    return () => document.removeEventListener("click", handleOutsideClick);
   }, [handleOutsideClick]);
 
   return (
@@ -111,33 +113,93 @@ const Navbar: React.FC = () => {
             </span>
           </div>
 
-          <button type="button">
-            <img src="/figma/Vector.svg" alt="Wishlist" className="w-6 h-6 hover:scale-110 transition-transform" />
+          <button type="button" className="p-1">
+            <img 
+              src="/figma/Vector.svg" 
+              alt="Wishlist" 
+              className="w-6 h-6 hover:scale-110 transition-transform" 
+            />
           </button>
 
-          <button type="button">
-            <img src="/figma/Cart1.svg" alt="Cart" className="w-6 h-6 hover:scale-110 transition-transform" />
+          <button type="button" className="p-1">
+            <img 
+              src="/figma/Cart1.svg" 
+              alt="Cart" 
+              className="w-6 h-6 hover:scale-110 transition-transform" 
+            />
           </button>
 
           {/* Avatar Dropdown */}
-          <div className="relative" onClick={toggleAvatar} id="avatar-menu">
-            {authData.imgUrl ? (
-              <img src={authData.imgUrl} alt="User Avatar" className="w-12 h-12 rounded-full" />
-            ) : (
-              <MdAccountCircle className="text-3xl cursor-pointer hover:text-blue-600"  />
-            )}
-
+          <div className="relative" id="avatar-menu">
+            <button 
+              type="button" 
+              onClick={toggleAvatar}
+              className="focus:outline-none"
+              aria-label="User menu"
+            >
+              {authData?.imgUrl ? (
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all">
+                  <img 
+                    src={authData.imgUrl} 
+                    alt="User Avatar" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <MdAccountCircle className="text-4xl md:text-5xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
+              )}
+            </button>
             
             {avatarOpen && (
-              <ul className="absolute top-10 right-0 bg-white border rounded-md shadow-lg w-48 z-50 text-sm text-gray-700">
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Manage My Account</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Orders</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">My Wishlist</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Payment Methods</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Order Returns & Refunds</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Refer a Friend</li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Help / Support Center</li>
-                <li className="px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer">Logout</li>
+              <ul className="absolute top-14 right-0 bg-white border rounded-md shadow-lg w-48 z-50 text-sm text-gray-700 overflow-hidden">
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors" 
+                  onClick={(e) => handleDropdownItemClick("/account", e)}
+                >
+                  Manage My Account
+                </li>
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/orders", e)}
+                >
+                  My Orders
+                </li>
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/wishlist", e)}
+                >
+                  My Wishlist
+                </li>
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/payment-methods", e)}
+                >
+                  Payment Methods
+                </li>
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/returns", e)}
+                >
+                  Order Returns & Refunds
+                </li>
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/refer", e)}
+                >
+                  Refer a Friend
+                </li>
+                <li 
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/support", e)}
+                >
+                  Help / Support Center
+                </li>
+                <li className="px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer transition-colors">
+                  Logout
+                </li>
               </ul>
             )}
           </div>

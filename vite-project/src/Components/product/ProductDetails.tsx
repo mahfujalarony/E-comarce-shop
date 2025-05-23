@@ -260,6 +260,7 @@ const ProductDetails: React.FC = () => {
             <Button
               className="flex-1 py-3 bg-green-600 hover:bg-green-700"
               disabled={!product.inStock}
+              onClick={() => navigate(`/payment-methods/${product._id}?price=${product.price}`)}
             >
               Buy Now
             </Button>

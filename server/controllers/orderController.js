@@ -17,6 +17,8 @@ exports.createDirectOrder = async (req, res) => {
         product: product._id,
         quantity: item.quantity,
         price: product.price,
+        image: product.image[0],
+        
       };
     }));
 
