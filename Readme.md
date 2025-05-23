@@ -1,7 +1,7 @@
 ##  Project Status
 
 **This project is currently in development phase.**  
-The site is not live yet, but core features are being implemented.
+The site is not live yet, but core features are being implemented .
 
 ---
 
