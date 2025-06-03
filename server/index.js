@@ -8,6 +8,9 @@ const reviewRouter = require('./routers/reviewRouter');
 const imgRouter = require('./routers/imgRouter');
 const cors = require('cors');
 const authRouter = require('./routers/authRouter');
+const addressRoutes = require('./routers/addressRoutes')
+const OrderRouter = require('./routers/orderRouter');
+const wishlistRouter = require('./routers/wishListRouter');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -19,6 +22,10 @@ app.use('/api', imgRouter);
 app.use('/api', cartRouter);
 app.use('/api', reviewRouter);
 app.use('/api', authRouter);
+app.use('/api', addressRoutes);
+app.use('/api', OrderRouter);
+app.use('/api', wishlistRouter);
+
 
 const startServer = async () => {
   try {

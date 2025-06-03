@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthData {
   name: string;
@@ -7,6 +8,7 @@ interface AuthData {
 }
 
 const ManageAccount: React.FC = () => {
+    const navigate = useNavigate();
     const { authData } = useAuth();
     const { name, imgUrl } = authData as AuthData;
     const user = {
@@ -17,15 +19,15 @@ const ManageAccount: React.FC = () => {
     };
 
     const menuItems = [
-        { icon: '📦', label: 'Orders' },
-        { icon: '📝', label: 'Quote' },
-        { icon: '👤', label: 'Edit Profile' },
-        { icon: '🔒', label: 'Change Password' },
-        { icon: '📍', label: 'Addresses' },
-        { icon: '❤️', label: 'Wish List' },
-        { icon: '💻', label: 'Saved PC' },
-        { icon: '⭐', label: 'Star Points' },
-        { icon: '💸', label: 'Your Transactions' },
+        { icon: '📦', label: 'Orders', path: '/orders' },
+        { icon: '📝', label: 'Quote', path: '/account/quote' },
+        { icon: '👤', label: 'Edit Profile', path: '/account/edit-profile' },
+        { icon: '🔒', label: 'Change Password', path: '/account/change-password' },
+        { icon: '📍', label: 'Addresses', path: '/account/addresses' },
+        { icon: '❤️', label: 'Wish List', path: '/account/wishlist' },
+        { icon: '💻', label: 'Saved PC', path: '/account/saved-pc' },
+        { icon: '⭐', label: 'Star Points', path: '/account/star-points' },
+        { icon: '💸', label: 'Your Transactions', path: '/account/transactions' },
     ];
 
     return (
@@ -87,6 +89,7 @@ const ManageAccount: React.FC = () => {
                     {menuItems.map((item, index) => (
                         <div
                             key={index}
+                            onClick={() => navigate(item.path)}
                             className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow duration-200"
                         >
                             <div className="text-4xl mb-2">{item.icon}</div>

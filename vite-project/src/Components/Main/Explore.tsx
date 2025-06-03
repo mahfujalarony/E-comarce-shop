@@ -3,6 +3,7 @@ import { GoArrowRight, GoArrowLeft } from 'react-icons/go';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Rating from '../ui/Rating';
 
 type Product = {
   _id: string;
@@ -81,7 +82,7 @@ const Explore: React.FC = () => {
                 <div 
                   key={product._id} 
                   onClick={() => handleProductClick(product._id)}
-                  className="relative w-full h-72 border rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+                  className="relative w-full h-80 border rounded-lg cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <img
                     src={product.images[0]}
@@ -99,7 +100,18 @@ const Explore: React.FC = () => {
                         <p className="text-sm text-red-400 line-through">৳{product.oldPrice}</p>
                       )}
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <Rating productId={product._id} />
+
+                                    <button
+                    onClick={(e) => {
+                    e.stopPropagation(); // যাতে উপরের onClick না চলে
+                    handleAddToCart(product); // এই ফাংশনটা তুমি নিজে ডিফাইন করবে
+                  }}
+                  className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                 >
+                    Add to Cart
+                  </button>
+                    {/* <div className="flex items-center space-x-1">
                       {[...Array(5)].map((_, index) => (
                         <span key={index}>
                           {index < Math.floor(product.stars || 0) ? (
@@ -110,7 +122,7 @@ const Explore: React.FC = () => {
                         </span>
                       ))}
                       <span className="text-sm">({product.reviews || 0})</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               ))}

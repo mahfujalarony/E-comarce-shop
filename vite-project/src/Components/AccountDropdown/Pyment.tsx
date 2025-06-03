@@ -173,6 +173,10 @@ const Pyment = () => {
       return v;
     }
   };
+  const handleCashOnDelivery = () => {
+  alert("Your order will be processed as Cash on Delivery");
+  // Add your COD logic here
+};
 
   const formatExpiryDate = (value: string): string => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');

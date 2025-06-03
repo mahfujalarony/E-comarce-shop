@@ -22,6 +22,9 @@ import Pyment from "./Components/AccountDropdown/Pyment.tsx"; // Fixed syntax, k
 import Refer from "./Components/AccountDropdown/Refer.tsx";
 import WishList from "./Components/AccountDropdown/WishList.tsx";
 import HelpCenter from "./Components/AccountDropdown/HelpCenter.tsx"; // Added missing import
+import CardPayment from "./Components/AccountDropdown/PaymentMethod.tsx";
+import AddressForm from "./Components/AccountDropdown/AddressForm.tsx"; // Added missing import
+import ReviewComponent from "./Components/product/ReviewComponent.tsx"; // Added missing import
 
 function App() {
   return (
@@ -38,9 +41,14 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="*" element={<NotFound />} />
-          <Route path="/details/:id" element={<ProductDetails />} />
+
+
+
+          
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/insert" element={<InsertOne />} />
+
+
           {/* Dropdown Routes */}
           <Route path="/account" element={<ManageAccount />} />
           <Route path="/orders" element={<MyOrders />} />
@@ -50,6 +58,17 @@ function App() {
           <Route path="/refer" element={<Refer />} />
           <Route path="/support" element={<HelpCenter />} />
           <Route path="/reviews" element={<MyReviws />} />
+
+
+          <Route path="/details/:id" element={<ProductDetails />} />
+          <Route path="/details/payment/:id" element={<CardPayment />} />
+          <Route path="/details/payment/address" element={<AddressForm />} />
+
+
+
+          <Route path="/review" element={<ReviewComponent />} />
+          
+          {/* Additional Routes */}
         </Routes>
         <Footer />
       </BrowserRouter>

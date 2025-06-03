@@ -3,6 +3,7 @@ import { GoArrowRight } from 'react-icons/go';
 import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Rating from '../ui/Rating';
 
 interface Product {
   _id: string;
@@ -111,7 +112,7 @@ const BestSellingComponent: React.FC = () => {
             <div
               key={product._id}
               onClick={() => handleProductClick(product._id)}
-              className="relative w-56 h-72 border rounded-lg flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow"
+              className="relative w-56 h-80 border rounded-lg flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow"
             >
               <img
                 src={product.images[0]}
@@ -129,18 +130,16 @@ const BestSellingComponent: React.FC = () => {
                     <p className="text-sm text-red-400 line-through">৳{product.oldPrice}</p>
                   )}
                 </div>
-                <div className="flex items-center space-x-1 mt-1">
-                  {[...Array(5)].map((_, index) => (
-                    <span key={index}>
-                      {index < Math.floor(product.stars || 0) ? (
-                        <span className="text-yellow-400">★</span>
-                      ) : (
-                        <span className="text-gray-300">☆</span>
-                      )}
-                    </span>
-                  ))}
-                  <span className="text-sm">({product.reviews || 0})</span>
-                </div>
+                <Rating productId={product._id} />
+                <button
+                    onClick={(e) => {
+                    e.stopPropagation(); // যাতে উপরের onClick না চলে
+                    handleAddToCart(product); // এই ফাংশনটা তুমি নিজে ডিফাইন করবে
+                  }}
+                  className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                 >
+                    Add to Cart
+                  </button>
               </div>
             </div>
           ))}

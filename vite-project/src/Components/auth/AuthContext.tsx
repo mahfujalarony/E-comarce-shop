@@ -2,10 +2,12 @@ import React, {useEffect,  createContext, useContext, useState } from "react";
 
 interface AuthData {
   name: string | null;
+  userId: string | null;
   email: string | null;
   password?: string;
   imgUrl?: string | null;
   isAuthenticated: boolean;
+  token?: string | null;
 }
 
 
@@ -20,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authData, setAuthData] = useState<AuthData>({
     name: "",
     email: "",
+    userId: "",
     password: "",
     imgUrl: "",
     isAuthenticated: false,
@@ -33,10 +36,12 @@ useEffect(() => {
   if (token && user) {
     const parsedUser = JSON.parse(user);
     setAuthData({
+      userId: parsedUser._id || null,
       name: parsedUser.name || "",
       email: parsedUser.email || "",
       imgUrl: parsedUser.imgUrl || "",
       isAuthenticated: true,
+      token: token || null,
     });
   }
 }, []);

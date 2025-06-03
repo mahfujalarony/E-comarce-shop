@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../ui/Button';
 import { useQuery } from '@tanstack/react-query';
+import Reviews from './Reviews';
+import { useAuth } from '../auth/AuthContext';
 
 interface Product {
   _id: string;
@@ -28,47 +30,70 @@ interface SimilarProduct {
 }
 
 const fetchProductDetails = async (productId: string) => {
-  const response = await axios.get(`http://localhost:3001/api/products/${productId}`);
-  return response.data;
+  try {
+    const response = await axios.get(`http://localhost:3001/api/products/${productId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to fetch product details. Please try again later.');
+  }
 };
 
 const fetchSimilarProducts = async (category: string, excludeId: string) => {
-  const response = await axios.get(
-    `http://localhost:3001/api/products?category=${category}&limit=4&exclude=${excludeId}`
-  );
-  return response.data;
+  try {
+    const response = await axios.get(
+      `http://localhost:3001/api/products?category=${category}&limit=4&exclude=${excludeId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to fetch similar products.');
+  }
 };
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState<string | null>(null);
   const [size, setSize] = useState<string | null>(null);
+  const { authData } = useAuth();
+  const userId = authData.userId;
+  const userName = authData.name;
 
-  const { data: product, isLoading, isError, error } = useQuery<Product>({
+  // Fetch product details
+  const { 
+    data: product, 
+    isLoading, 
+    isError, 
+    error 
+  } = useQuery<Product>({
     queryKey: ['product', id],
     queryFn: () => fetchProductDetails(id || ''),
     enabled: !!id,
   });
 
+  // Initialize selectedImage with the first image
+  const [selectedImage, setSelectedImage] = useState<string>('');
+
+  // Fetch similar products
   const { data: similarProducts } = useQuery<SimilarProduct[]>({
     queryKey: ['similarProducts', product?.category, id],
-    queryFn: () => 
-      product?.category ? fetchSimilarProducts(product.category, id || '') : [],
+    queryFn: () =>
+      product?.category ? fetchSimilarProducts(product.category, id || '') : Promise.resolve([]),
     enabled: !!product?.category,
   });
 
+  // Set initial values when product data is loaded
   useEffect(() => {
-    if (product?.images?.length) {
-      setSelectedImage(product.images[0]);
-    }
-    if (product?.colors?.length) {
-      setColor(product.colors[0]);
-    }
-    if (product?.sizes?.length) {
-      setSize(product.sizes[0]);
+    if (product) {
+      if (product.images?.length > 0 && !selectedImage) {
+        setSelectedImage(product.images[0]);
+      }
+      if (product.colors?.length > 0 && !color) {
+        setColor(product.colors[0]);
+      }
+      if (product.sizes?.length > 0 && !size) {
+        setSize(product.sizes[0]);
+      }
     }
   }, [product]);
 
@@ -76,6 +101,14 @@ const ProductDetails: React.FC = () => {
     navigate(`/details/${productId}`);
     window.scrollTo(0, 0);
   };
+
+  if (!id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center py-10 text-red-500">Invalid product ID</div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -89,7 +122,7 @@ const ProductDetails: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center py-10 text-red-500">
-          Error: {error.message}
+          Error: {error instanceof Error ? error.message : 'Unknown error'}
         </div>
       </div>
     );
@@ -103,7 +136,7 @@ const ProductDetails: React.FC = () => {
     );
   }
 
-  const discountedPrice = product.oldPrice 
+  const discountedPrice = product.oldPrice
     ? Math.round(product.oldPrice * (1 - product.discount / 100))
     : product.price;
 
@@ -111,18 +144,15 @@ const ProductDetails: React.FC = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Main Product Section */}
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Image Gallery - Mobile First */}
+        {/* Image Gallery */}
         <div className="w-full lg:w-1/2">
-          {/* Main Image */}
           <div className="mb-4 bg-white rounded-lg shadow-md overflow-hidden">
             <img
-              src={selectedImage}
+              src={selectedImage || 'https://via.placeholder.com/400'}
               alt={product.name}
               className="w-full h-64 sm:h-80 md:h-96 object-contain"
             />
           </div>
-          
-          {/* Thumbnail Grid */}
           <div className="grid grid-cols-4 gap-2">
             {product.images.map((img, i) => (
               <button
@@ -147,8 +177,6 @@ const ProductDetails: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             {product.name}
           </h1>
-
-          {/* Price Section */}
           <div className="flex items-center gap-3">
             <span className="text-2xl font-bold text-red-600">
               ${discountedPrice}
@@ -164,8 +192,6 @@ const ProductDetails: React.FC = () => {
               </span>
             )}
           </div>
-
-          {/* Rating */}
           <div className="flex items-center gap-2">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
@@ -182,11 +208,8 @@ const ProductDetails: React.FC = () => {
               ({product.reviews || 0} reviews)
             </span>
           </div>
-
-          {/* Description */}
           <p className="text-gray-700">{product.description}</p>
-
-          {/* Color Selection */}
+          
           {product.colors && product.colors.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-semibold">Color:</h3>
@@ -205,8 +228,7 @@ const ProductDetails: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Size Selection */}
+          
           {product.sizes && product.sizes.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-semibold">Size:</h3>
@@ -227,8 +249,7 @@ const ProductDetails: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Quantity Selector */}
+          
           <div className="flex items-center gap-4">
             <h3 className="font-semibold">Quantity:</h3>
             <div className="flex items-center border rounded-md">
@@ -248,8 +269,7 @@ const ProductDetails: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {/* Action Buttons */}
+          
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Button
               className="flex-1 py-3"
@@ -260,13 +280,12 @@ const ProductDetails: React.FC = () => {
             <Button
               className="flex-1 py-3 bg-green-600 hover:bg-green-700"
               disabled={!product.inStock}
-              onClick={() => navigate(`/payment-methods/${product._id}?price=${product.price}`)}
+              onClick={() => navigate(`/details/payment/${product._id}?price=${product.price}&quantity=${quantity}`)}
             >
               Buy Now
             </Button>
           </div>
-
-          {/* Delivery Info */}
+          
           <div className="space-y-2 pt-4 text-sm">
             <div className="flex items-center gap-2 text-gray-600">
               <span>✅</span>
@@ -291,6 +310,9 @@ const ProductDetails: React.FC = () => {
           {product.description}
         </p>
       </section>
+
+      {/* Reviews Section */}
+      <Reviews productId={id} currentUserId={userId} currentUserName={userName} />
 
       {/* Similar Products Section */}
       {similarProducts && similarProducts.length > 0 && (
@@ -319,27 +341,6 @@ const ProductDetails: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* Reviews Section */}
-      <section className="mt-16 bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-bold mb-6">Customer Reviews</h2>
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="border-b border-gray-200 pb-4 mb-4 last:border-0">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-gray-300"></div>
-              <span className="font-medium">User {index + 1}</span>
-            </div>
-            <div className="flex mb-2">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-yellow-400">★</span>
-              ))}
-            </div>
-            <p className="text-gray-700">
-              This product is amazing! The quality exceeded my expectations.
-            </p>
-          </div>
-        ))}
-      </section>
     </div>
   );
 };
