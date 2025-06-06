@@ -2,16 +2,58 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccountCircle } from "react-icons/md";
 import { useAuth } from '../auth/AuthContext';
+import { useSocket } from '../socket/SocketContext'; // SocketContext থেকে useSocket আমদানি
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
+import ChatIcon from '@mui/icons-material/Chat';
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import Autocomplete from '@mui/material/Autocomplete';
+import { styled } from '@mui/material/styles';
 
 const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
-const Navbar: React.FC = () => {
+// কাস্টম স্টাইলড Autocomplete
+const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
+  '& .MuiInputBase-root': {
+    borderRadius: '8px',
+    border: '1px solid #d1d5db',
+    padding: '0.25rem 0.75rem',
+    fontSize: '0.875rem',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '0.75rem',
+      padding: '0.2rem 0.5rem',
+    },
+    '&:hover': {
+      borderColor: '#3b82f6',
+    },
+    '&.Mui-focused': {
+      borderColor: '#3b82f6',
+      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.2)',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '0.875rem',
+    color: '#6b7280',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '0.75rem',
+    },
+  },
+}));
+
+const Navbar: React.FC<{ onlineUsersCount: number }> = ({ onlineUsersCount }) => {
   const [activeMenu, setActiveMenu] = useState<string>('Home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [avatarOpen, setAvatarOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const { authData } = useAuth();
+  const { totalUnreadCount, hasUnreadMessages } = useSocket(); // useSocket থেকে ডেটা নেওয়া
+
+  const top100Films = [
+    { title: 'The Shawshank Redemption', year: 1994 },
+    { title: 'software', year: 1994 },
+    // ... বাকি ফিল্ম লিস্ট (অপরিবর্তিত)
+  ];
 
   const handleResize = useCallback(() => {
     setIsMobile(window.innerWidth < 1024);
@@ -66,12 +108,12 @@ const Navbar: React.FC = () => {
   return (
     <div className="font-inter mb-24">
       {/* Fixed Navbar */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md px-4 sm:px-10 xl:px-32 h-20 flex justify-between items-center">
+      <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md px-4 sm:px-6 md:px-10 xl:px-32 h-20 flex justify-between items-center">
         {/* Logo/Menu Button */}
         <div className="relative">
           <button
             type="button"
-            className="font-bold text-2xl cursor-pointer hover:text-red-500 transition-colors duration-300"
+            className="font-bold text-xl sm:text-2xl cursor-pointer hover:text-red-500 transition-colors duration-300"
             onClick={toggleSidebar}
           >
             Exclusive
@@ -80,7 +122,7 @@ const Navbar: React.FC = () => {
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex">
-          <ul className="flex text-xl text-[#808080] space-x-5 xl:space-x-10">
+          <ul className="flex text-base md:text-lg text-[#808080] space-x-4 xl:space-x-8">
             {menuItems.map((item) => (
               <li key={item}>
                 <button
@@ -101,33 +143,50 @@ const Navbar: React.FC = () => {
         </nav>
 
         {/* Right Icons */}
-        <div className="flex gap-3 sm:gap-5 items-center">
-          <div className="relative w-full max-w-[180px] sm:max-w-sm hidden sm:block hover:shadow-md transition-shadow duration-300">
-            <input
-              type="search"
-              placeholder="What are you looking for?"
-              className="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-colors duration-300"
+        <div className="flex gap-2 sm:gap-4 items-center">
+          {/* Search Bar */}
+          <Stack spacing={2} sx={{ width: { xs: 150, sm: 200, md: 250 } }}>
+            <StyledAutocomplete
+              freeSolo
+              id="free-solo-2-demo"
+              disableClearable
+              options={top100Films.map((option) => option.title)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Search..."
+                  slotProps={{
+                    input: {
+                      ...params.InputProps,
+                      type: 'search',
+                    },
+                  }}
+                />
+              )}
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              🔍
+          </Stack>
+
+          {/* Message Icon with Badge */}
+          <button type="button" onClick={() => navigate('/message')} className="relative">
+            <ChatIcon fontSize={isMobile ? 'medium' : 'large'} />
+            {hasUnreadMessages && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-1">
+                {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Cart Icon */}
+          <button type="button" onClick={() => navigate('/wishlist')} className="">
+            <ShoppingCartCheckoutIcon fontSize={isMobile ? 'medium' : 'large'} />
+          </button>
+
+          {/* Online Users Count */}
+          {onlineUsersCount > 0 && (
+            <span className="absolute top-2 right-20 bg-green-500 text-white text-xs font-semibold rounded-full px-2 py-1">
+              {onlineUsersCount}
             </span>
-          </div>
-
-          <button type="button" className="p-1">
-            <img 
-              src="/figma/Vector.svg" 
-              alt="Wishlist" 
-              className="w-6 h-6 hover:scale-110 transition-transform" 
-            />
-          </button>
-
-          <button type="button" className="p-1">
-            <img 
-              src="/figma/Cart1.svg" 
-              alt="Cart" 
-              className="w-6 h-6 hover:scale-110 transition-transform" 
-            />
-          </button>
+          )}
 
           {/* Avatar Dropdown */}
           <div className="relative" id="avatar-menu">
@@ -138,7 +197,7 @@ const Navbar: React.FC = () => {
               aria-label="User menu"
             >
               {authData?.imgUrl ? (
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all">
                   <img 
                     src={authData.imgUrl} 
                     alt="User Avatar" 
@@ -149,12 +208,12 @@ const Navbar: React.FC = () => {
                   />
                 </div>
               ) : (
-                <MdAccountCircle className="text-4xl md:text-5xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
+                <MdAccountCircle className="text-3xl sm:text-4xl md:text-5xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
               )}
             </button>
             
             {avatarOpen && (
-              <ul className="absolute top-14 right-0 bg-white border rounded-md shadow-lg w-48 z-50 text-sm text-gray-700 overflow-hidden">
+              <ul className="absolute top-12 sm:top-14 right-0 bg-white border rounded-md shadow-lg w-48 z-50 text-sm text-gray-700 overflow-hidden">
                 <li 
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors" 
                   onClick={(e) => handleDropdownItemClick("/account", e)}
@@ -222,7 +281,7 @@ const Navbar: React.FC = () => {
         } lg:hidden`}
         aria-hidden={!sidebarOpen}
       >
-        <ul className="flex flex-col text-xl text-[#808080] space-y-5 mt-20">
+        <ul className="flex flex-col text-lg text-[#808080] space-y-5 mt-20">
           {menuItems.map((item) => (
             <li key={item}>
               <button

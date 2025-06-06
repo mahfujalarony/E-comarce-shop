@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FaChevronRight } from 'react-icons/fa';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const images = ['/figma/xa (2).jpg', '/figma/xa (3).jpg'];
 
@@ -31,6 +33,7 @@ const Body: React.FC = () => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true); // Simulated loading state
 
   const isMobile = useMemo(() => window.innerWidth < 1024, []);
 
@@ -50,6 +53,14 @@ const Body: React.FC = () => {
   }, [isMobile]);
 
   useEffect(() => {
+    // Simulated loading for 2 seconds
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (images.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
@@ -67,8 +78,45 @@ const Body: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Skeleton for Sidebar Categories
+  const renderSidebarSkeleton = () => (
+    <ul className="flex flex-col space-y-2 text -ml-2">
+      {[...Array(9)].map((_, i) => (
+        <li key={i} className="p-2">
+          <Skeleton height={24} width="80%" />
+          {i < 2 && (
+            <ul className="pl-4 mt-1 ml-20 space-y-1">
+              {[...Array(3)].map((_, j) => (
+                <li key={j}>
+                  <Skeleton height={20} width="60%" />
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="px-4 sm:px-10 xl:px-32 font-inter">
+        <div className="flex flex-col-reverse lg:flex-row w-full mt-8 gap-4">
+          {/* Sidebar Skeleton */}
+          <aside className="w-full lg:w-1/3 p-4" aria-label="Categories">
+            {renderSidebarSkeleton()}
+          </aside>
+          {/* Slider Skeleton */}
+          <div className="relative w-full h-[400px]">
+            <Skeleton height="100%" className="rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className='px-4 sm:px-10 xl:px-32 font-inter'>
+    <div className="px-4 sm:px-10 xl:px-32 font-inter">
       <div className="flex flex-col-reverse lg:flex-row w-full mt-8 gap-4">
         {/* Sidebar Categories */}
         <aside className="w-full lg:w-1/3 p-4" aria-label="Categories">

@@ -4,6 +4,8 @@ import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider } from '@t
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Rating from '../ui/Rating';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 interface Product {
   _id: string;
@@ -35,7 +37,7 @@ const BestSellingComponent: React.FC = () => {
   } = useInfiniteQuery({
     queryKey: ['bestSellingHorizontal'],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await axios.get(`${API_URL}?limit=5&offset=${pageParam}`);
+      const response = await axios.get(`${API_URL}?limit=8&offset=${pageParam}`);
       return response.data;
     },
     initialPageParam: 0,
@@ -61,8 +63,104 @@ const BestSellingComponent: React.FC = () => {
     navigate(`/details/${productId}`);
   };
 
+  // Add to Cart Function (যেহেতু এটি কোডে কমেন্ট করা ছিল, আমি এটি যোগ করছি)
+  const handleAddToCart = async (product: Product) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please login first');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:3001/api/addwishlist',
+        { productId: product._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.message) {
+        alert(response.data.message);
+      } else {
+        alert(`${product.name} has been added to wishlist!`);
+      }
+    } catch (error: any) {
+      alert('Error adding to cart: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // Skeleton for Horizontal Products
+  const renderHorizontalSkeleton = () => (
+    <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-300">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="relative w-56 h-80 border rounded-lg flex-shrink-0 bg-white"
+        >
+          <Skeleton height={160} className="rounded-t-lg" />
+          <div className="absolute top-2 left-2 h-6 w-16">
+            <Skeleton />
+          </div>
+          <div className="p-4">
+            <Skeleton height={20} width="80%" />
+            <Skeleton height={18} width="60%" className="mt-2" />
+            <Skeleton height={16} width="40%" className="mt-2" />
+            <Skeleton height={36} width="100%" className="mt-4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   if (horizontalInitialLoading) {
-    return <div className="text-center py-10">Loading best selling products...</div>;
+    return (
+      <div className="px-4 sm:px-10 md:px-20">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+          <div className="w-full sm:w-auto">
+            <div className="flex items-center space-x-4orky: space-x-4">
+              <Skeleton width={12} height={28} />
+              <Skeleton width={100} className="ml-4" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-semibold mt-4">
+              <Skeleton width={200} />
+            </h1>
+            <Skeleton width={120} height={40} className="mt-6 sm:mt-0" />
+          </div>
+        </div>
+        {/* Products Skeleton */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">
+              <Skeleton width={100} />
+            </h2>
+            <Skeleton width={40} height={40} className="rounded-full" />
+          </div>
+          {renderHorizontalSkeleton()}
+        </div>
+        {/* Banner Section Skeleton */}
+        <div className="bg-gray-200 flex flex-col-reverse md:flex-row h-auto md:h-[100vh]">
+          <div className="flex-1 space-y-8 flex flex-col justify-center items-start px-6 md:px-10 py-10 md:py-0">
+            <Skeleton width={80} height={20} />
+            <Skeleton count={2} width={300} height={30} />
+            <div className="flex flex-wrap gap-4 md:space-x-6">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} width={80} height={80} circle />
+              ))}
+            </div>
+            <Skeleton width={140} height={40} className="rounded-md" />
+          </div>
+          <div className="flex-1 h-[300px] md:h-auto">
+            <Skeleton height="100%" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (horizontalError) {
@@ -132,14 +230,14 @@ const BestSellingComponent: React.FC = () => {
                 </div>
                 <Rating productId={product._id} />
                 <button
-                    onClick={(e) => {
-                    e.stopPropagation(); // যাতে উপরের onClick না চলে
-                    handleAddToCart(product); // এই ফাংশনটা তুমি নিজে ডিফাইন করবে
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(product);
                   }}
                   className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                 >
-                    Add to Cart
-                  </button>
+                >
+                  Add to Cart
+                </button>
               </div>
             </div>
           ))}

@@ -1,21 +1,39 @@
 const express = require('express');
 require('dotenv').config();
 const connectDB = require('./dbConfig');
+
+const cors = require('cors');
+const socketIo = require('socket.io');
+const http = require('http');
+
 const productRouter = require('./routers/productRouters');
 const cartRouter = require('./routers/cartRouter');
 const reviewRouter = require('./routers/reviewRouter');
 // const userRouter = require('./routers/userRouter');
 const imgRouter = require('./routers/imgRouter');
-const cors = require('cors');
 const authRouter = require('./routers/authRouter');
-const addressRoutes = require('./routers/addressRoutes')
+const addressRoutes = require('./routers/addressRoutes');
 const OrderRouter = require('./routers/orderRouter');
 const wishlistRouter = require('./routers/wishListRouter');
-const app = express();
-const port = process.env.PORT || 5000;
+const messageRouter = require('./routers/messageRouter');
+const messageSocket = require('./sockets/MessageSocket');
 
+const app = express();
+const server = http.createServer(app); // ✅ ঠিক জায়গায় একবার createServer
+const io = socketIo(server, {
+  cors: {
+    origin: "*", // প্রয়োজনে origin ঠিক করো
+    methods: ["GET", "POST"]
+  }
+});
+
+messageSocket(io); // Socket setup
+
+// Middleware
 app.use(express.json());
-app.use(cors())
+app.use(cors());
+
+// Routes
 app.use('/api', productRouter);
 app.use('/api', imgRouter);
 // app.use('/api', userRouter);
@@ -25,31 +43,27 @@ app.use('/api', authRouter);
 app.use('/api', addressRoutes);
 app.use('/api', OrderRouter);
 app.use('/api', wishlistRouter);
+app.use('/api/message', messageRouter); // ✅ তুমি মেসেজের রাউটারও যুক্ত করেছো
 
+// Test Route
+app.get('/', (req, res) => {
+  res.send('Hello, World!');
+});
+
+// Start Server
+const port = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    await connectDB(); 
+    await connectDB();
     console.log('✅ MongoDB connected');
-
-   
-   // await insertProducts();
-
-
-    app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
+    server.listen(port, () => {
+      console.log(`🚀 Server is running on port ${port}`);
     });
   } catch (err) {
     console.error('❌ Failed to start server:', err);
     process.exit(1);
   }
 };
-
-
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
-});
-
-
 
 startServer();

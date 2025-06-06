@@ -5,7 +5,6 @@ import BrowseCategory from './BrowsCatagory'
 import BestSelling from './BestSelling'
 import Explore from './Explore'
 import Feature from './Feature'
-import Footer from './Footer'
 import Body from './Body'
 
 const Main: React.FC = () => {

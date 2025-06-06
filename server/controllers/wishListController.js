@@ -28,7 +28,9 @@ const addWishList = async (req, res) => {
 
 const getWishLists = async (req, res) => {
   const userId = req.user._id;
-  console.log('Fetching wishlist for user:', userId);
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
 
   try {
     const wishlist = await Wishlist.findOne({ userId }).populate({

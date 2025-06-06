@@ -67,7 +67,7 @@ const ProductDetails: React.FC = () => {
     error 
   } = useQuery<Product>({
     queryKey: ['product', id],
-    queryFn: () => fetchProductDetails(id || ''),
+    queryFn: () => fetchProductDetails(id!),
     enabled: !!id,
   });
 
@@ -78,7 +78,7 @@ const ProductDetails: React.FC = () => {
   const { data: similarProducts } = useQuery<SimilarProduct[]>({
     queryKey: ['similarProducts', product?.category, id],
     queryFn: () =>
-      product?.category ? fetchSimilarProducts(product.category, id || '') : Promise.resolve([]),
+      product?.category ? fetchSimilarProducts(product.category, id!) : Promise.resolve([]),
     enabled: !!product?.category,
   });
 
@@ -88,14 +88,14 @@ const ProductDetails: React.FC = () => {
       if (product.images?.length > 0 && !selectedImage) {
         setSelectedImage(product.images[0]);
       }
-      if (product.colors?.length > 0 && !color) {
+      if (product.colors && product.colors.length > 0 && !color) {
         setColor(product.colors[0]);
       }
-      if (product.sizes?.length > 0 && !size) {
+      if (product.sizes && product.sizes.length > 0 && !size) {
         setSize(product.sizes[0]);
       }
     }
-  }, [product]);
+  }, [product, selectedImage, color, size]);
 
   const handleProductNavigation = (productId: string) => {
     navigate(`/details/${productId}`);
@@ -154,21 +154,25 @@ const ProductDetails: React.FC = () => {
             />
           </div>
           <div className="grid grid-cols-4 gap-2">
-            {product.images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImage(img)}
-                className={`aspect-square overflow-hidden rounded-md border-2 ${
-                  selectedImage === img ? 'border-blue-500' : 'border-gray-200'
-                }`}
-              >
-                <img
-                  src={img}
-                  alt={`Thumbnail ${i}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
+            {product.images && product.images.length > 0 ? (
+              product.images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImage(img)}
+                  className={`aspect-square overflow-hidden rounded-md border-2 ${
+                    selectedImage === img ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                >
+                  <img
+                    src={img}
+                    alt={`Thumbnail ${i}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))
+            ) : (
+              <div>No images available</div>
+            )}
           </div>
         </div>
 
@@ -277,6 +281,9 @@ const ProductDetails: React.FC = () => {
             >
               {product.inStock ? 'Add to Cart' : 'Out of Stock'}
             </Button>
+            <Button onClick={() => navigate(`/message`)}>
+              Message Us
+            </Button>
             <Button
               className="flex-1 py-3 bg-green-600 hover:bg-green-700"
               disabled={!product.inStock}
@@ -312,7 +319,7 @@ const ProductDetails: React.FC = () => {
       </section>
 
       {/* Reviews Section */}
-      <Reviews productId={id} currentUserId={userId} currentUserName={userName} />
+      <Reviews productId={id!} currentUserId={userId} currentUserName={userName} />
 
       {/* Similar Products Section */}
       {similarProducts && similarProducts.length > 0 && (
