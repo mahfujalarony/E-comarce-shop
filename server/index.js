@@ -16,6 +16,7 @@ const addressRoutes = require('./routers/addressRoutes');
 const OrderRouter = require('./routers/orderRouter');
 const wishlistRouter = require('./routers/wishListRouter');
 const messageRouter = require('./routers/messageRouter');
+const adminRouter = require('./routers/adminRouter'); 
 const messageSocket = require('./sockets/MessageSocket');
 
 const app = express();
@@ -43,7 +44,8 @@ app.use('/api', authRouter);
 app.use('/api', addressRoutes);
 app.use('/api', OrderRouter);
 app.use('/api', wishlistRouter);
-app.use('/api/message', messageRouter); // ✅ তুমি মেসেজের রাউটারও যুক্ত করেছো
+app.use('/api', adminRouter); 
+app.use('/api/message', messageRouter);
 
 // Test Route
 app.get('/', (req, res) => {

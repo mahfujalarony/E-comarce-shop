@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { GoArrowRight } from 'react-icons/go';
-import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Rating from '../ui/Rating';
@@ -28,17 +28,16 @@ const BestSellingComponent: React.FC = () => {
 
   // Horizontal Products Query
   const {
-    data: horizontalProducts = [],
+    data: horizontalProducts,
     fetchNextPage: fetchMoreHorizontal,
-    hasNextPage: hasMoreHorizontal,
     isFetchingNextPage: horizontalLoading,
     isLoading: horizontalInitialLoading,
     error: horizontalError,
   } = useInfiniteQuery({
     queryKey: ['bestSellingHorizontal'],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam = 0 }: { pageParam?: number }) => {
       const response = await axios.get(`${API_URL}?limit=8&offset=${pageParam}`);
-      return response.data;
+      return response.data as Product[];
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
@@ -46,7 +45,7 @@ const BestSellingComponent: React.FC = () => {
     },
   });
 
-  const flattenedHorizontalProducts = horizontalProducts.pages?.flat() || [];
+  const flattenedHorizontalProducts = horizontalProducts?.pages?.flat() || [];
 
   const loadMoreHorizontal = async () => {
     await fetchMoreHorizontal();
@@ -63,7 +62,7 @@ const BestSellingComponent: React.FC = () => {
     navigate(`/details/${productId}`);
   };
 
-  // Add to Cart Function (যেহেতু এটি কোডে কমেন্ট করা ছিল, আমি এটি যোগ করছি)
+  // Add to Cart Function
   const handleAddToCart = async (product: Product) => {
     try {
       const token = localStorage.getItem('token');
@@ -123,7 +122,7 @@ const BestSellingComponent: React.FC = () => {
         {/* Header Skeleton */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
           <div className="w-full sm:w-auto">
-            <div className="flex items-center space-x-4orky: space-x-4">
+            <div className="flex items-center space-x-4">
               <Skeleton width={12} height={28} />
               <Skeleton width={100} className="ml-4" />
             </div>

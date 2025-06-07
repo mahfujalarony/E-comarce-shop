@@ -28,6 +28,7 @@ const ManageAccount: React.FC = () => {
         { icon: '💻', label: 'Saved PC', path: '/account/saved-pc' },
         { icon: '⭐', label: 'Star Points', path: '/account/star-points' },
         { icon: '💸', label: 'Your Transactions', path: '/account/transactions' },
+        { icon: '🛠️', label: 'Admin Panel', path: '/admin' },
     ];
 
     return (

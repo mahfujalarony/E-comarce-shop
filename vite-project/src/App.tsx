@@ -14,7 +14,6 @@ import Step2 from './Components/auth/Step2.tsx';
 import Step3 from './Components/auth/Step3.tsx';
 import ForgotPassword from './Components/auth/ForgotPassword.tsx';
 import NotFound from './Components/error/NotFound.tsx';
-import InsertOne from './Components/Admin/InsertOne.tsx';
 import ManageAccount from './Components/AccountDropdown/ManageAccount.tsx';
 import MyOrders from './Components/AccountDropdown/MyOrders.tsx';
 import MyReviews from './Components/AccountDropdown/MyReviws.tsx';
@@ -29,6 +28,14 @@ import ProductDetails from './Components/product/ProductDetails.tsx';
 import ReviewComponent from './Components/product/ReviewComponent.tsx';
 import Messages from './Components/Main/Message.tsx';
 import UnreadMessageNotification from './Components/ui/MessageNotification.tsx';
+
+import Admin from './Components/Admin/Admin.tsx'; 
+import RequestAdmin from './Components/Admin/RequestAdmin.tsx'; 
+import InsertOne from './Components/Admin/InsertOne.tsx';
+import AdminOnlyRoute from './Components/PrivateRoute/AdminOnlyRoute.tsx';
+
+
+
 import socket from './socket.ts';
 import { useEffect } from 'react';
 
@@ -71,7 +78,6 @@ function AppWrapper() {
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/admin/insert" element={<InsertOne />} />
         <Route path="/account" element={<ManageAccount />} />
         <Route path="/orders" element={<MyOrders />} />
         <Route path="/wishlist" element={<WishList />} />
@@ -85,6 +91,30 @@ function AppWrapper() {
         <Route path="/details/payment/address" element={<AddressForm />} />
         <Route path="/review" element={<ReviewComponent />} />
         <Route path="/message" element={<Messages />} />
+
+
+
+
+
+        {/* Admin Routes */}
+        <Route path="/admin/request" element={<RequestAdmin />} />
+<Route
+  path="/admin"
+  element={
+    <AdminOnlyRoute>
+      <Admin />
+    </AdminOnlyRoute>
+  }
+/>
+<Route
+  path="/admin/insert"
+  element={
+    <AdminOnlyRoute>
+      <InsertOne />
+    </AdminOnlyRoute>
+  }
+/>
+
       </Routes>
       {!shouldHideFooter && <Footer />}
     </>

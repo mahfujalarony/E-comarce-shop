@@ -4,9 +4,10 @@ import { GoArrowRight } from 'react-icons/go';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Rating from '../ui/Rating';
-import { useAuth } from '../auth/AuthContext';
+//import { useAuth } from '../auth/AuthContext';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+
 
 interface Product {
   _id: string;
@@ -29,17 +30,22 @@ const queryClient = new QueryClient();
 
 const fetchProducts = async ({ pageParam = 0 }) => {
   const response = await axios.get(`http://localhost:3001/api/products?limit=20&offset=${pageParam}`);
+  //console.log('Fetched products:', response.data);
   return response.data;
 };
 
 const ProductList: React.FC = () => {
+
+
+
   const [timer, setTimer] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [cartLoading, setCartLoading] = useState<string | null>(null);
   const [showVerticalProducts, setShowVerticalProducts] = useState(false); // New state to control vertical products display
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { authData } = useAuth();
-  const token = authData.token || localStorage.getItem('token');
+  //const { authData } = useAuth();
+  //const token = authData.token || localStorage.getItem('token');
+
 
   // Timer Logic
   useEffect(() => {
@@ -203,6 +209,10 @@ const ProductList: React.FC = () => {
     setShowVerticalProducts(true);
   };
 
+  const handleProductClick = (product: Product) => {
+    navigate(`/details/${product._id}`);
+  };
+
   if (horizontalLoading) {
     return (
       <div className="px-4 sm:px-8 md:px-16 py-10">
@@ -288,7 +298,7 @@ const ProductList: React.FC = () => {
             {horizontalProducts.map((product) => (
               <div
                 key={product._id}
-                onClick={() => navigate(`/details/${product._id}`)}
+                onClick={() => handleProductClick(product)}
                 className="relative w-56 h-80 border rounded-lg flex-shrink-0 cursor-pointer"
               >
                 <img

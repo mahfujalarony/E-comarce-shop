@@ -7,8 +7,12 @@ const {
   verifyOTPAndRegister,
   resetPasswordSendOTP,
   resetPasswordVerifyOTP,
-  resetPassword
+  resetPassword,
+  isAdminCkk,
+  
 } = require("../controllers/authController");
+
+const { protect, isAdmin } = require("../auth/authMiddleware");
 
 const router = express.Router();
 
@@ -25,5 +29,10 @@ router.post("/google", googleLogin);
 router.post("/reset-password-send-otp", resetPasswordSendOTP);
 router.post("/reset-password-verify-otp", resetPasswordVerifyOTP);
 router.post("/reset-password", resetPassword);
+
+
+// Role Ckk Router
+router.get("/roleckk", protect, isAdminCkk);
+
 
 module.exports = router;

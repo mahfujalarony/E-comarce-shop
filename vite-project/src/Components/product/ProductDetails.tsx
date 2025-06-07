@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { useQuery } from '@tanstack/react-query';
 import Reviews from './Reviews';
 import { useAuth } from '../auth/AuthContext';
+import Rating from '../ui/Rating';
 
 interface Product {
   _id: string;
@@ -197,7 +198,7 @@ const ProductDetails: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex">
+            {/* <div className="flex">
               {[...Array(5)].map((_, i) => (
                 <span key={i}>
                   {i < Math.floor(product.stars || 0) ? (
@@ -207,10 +208,11 @@ const ProductDetails: React.FC = () => {
                   )}
                 </span>
               ))}
-            </div>
-            <span className="text-sm text-gray-500">
+            </div> */}
+            <Rating productId={product._id} />
+            {/* <span className="text-sm text-gray-500">
               ({product.reviews || 0} reviews)
-            </span>
+            </span> */}
           </div>
           <p className="text-gray-700">{product.description}</p>
           

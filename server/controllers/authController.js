@@ -293,6 +293,38 @@ exports.googleLogin = async (req, res) => {
 
 
 
+exports.isAdminCkk = async(req, res) => {
+  try{
+    const userId  = req.user._id;
+    const user = await User.findById(userId).select('role');
+
+    if(!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admins only.' });
+    }
+
+    res.status(200).json({ message: 'Welcome Admin' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+
+exports.reqmakeadmin = async (req, res) => {
+  const userId = req.user._id;
+  const code = req.body.code;
+  const AdminSecret = process.env.ADMIN_SECRET;
+  if (code !== AdminSecret) {
+    return res.status(403).json({ message: 'Invalid secret code' });
+  }
+
+  res.status(200).json({ message: 'Request to make admin received' });
+}
+
+
 
 
 
