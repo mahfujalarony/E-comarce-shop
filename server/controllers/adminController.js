@@ -1,6 +1,8 @@
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const User = require('../model/UserModel');
+const Product = require('../model/productsModel');
+const Review = require('../model/Review');
 
 const makeAdminLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -77,3 +79,135 @@ exports.reqmakeadmin = [
     }
   }
 ];
+
+
+exports.fetchUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: 'user' }).select('name email role createdAt');
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Internal server error while fetching users.'
+    });
+  }
+};
+
+
+
+
+exports.fetchAllProducts = async (req, res) => {
+  try{
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+
+const products = await Product.find()
+  .skip(skip)
+  .limit(limit)
+  .sort({ createdAt: -1 })
+  .select('name price oldPrice description images discount category inStock createdAt');
+
+const reviews = await Review.find({ productId: { $in: products.map(p => p._id) } })
+  .select('userId productId rating review likes createdAt')
+  .populate('userId', 'name email imgUrl');
+
+const productsWithReviews = products.map(product => {
+  const productReviews = reviews.filter(r => r.productId.toString() === product._id.toString());
+  return {
+    ...product.toObject(),
+    reviews: productReviews
+  };
+});
+
+res.status(200).json({
+  error: false,
+  message: 'Products fetched successfully.',
+  data: {
+    products: productsWithReviews,
+    totalPages,
+    currentPage: page
+  }
+});
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Internal server error while fetching products.'
+    });
+  }
+};
+
+
+
+
+
+
+// Update for admin
+
+exports.UpdateProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const updateData = req.body;
+
+    const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true });
+
+    if (!updatedProduct) {
+      return res.status(404).json({
+        error: true,
+        message: 'Product not found.'
+      });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: 'Product updated successfully.',
+      data: updatedProduct
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Internal server error while updating product.'
+    });
+  }
+};
+
+
+
+// Delete for admin
+
+exports.DeleteProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    console.log('Deleting product with ID:', productId);
+
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+
+    if (!deletedProduct) {
+      return res.status(404).json({
+        error: true,
+        message: 'Product not found.',
+        console: 'Product deletion failed. No product found with the provided ID.'
+      });
+    }
+    console.log('Product deleted successfully:', deletedProduct);
+
+    res.status(200).json({
+      error: false,
+      message: 'Product deleted successfully.'
+    });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Internal server error while deleting product.'
+    });
+  }
+};

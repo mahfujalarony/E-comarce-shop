@@ -60,8 +60,10 @@ function AppWrapper() {
     };
   }, [senderId]);
 
-  const hideFooterRoutes = ['/message'];
-  const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
+  
+const shouldHideFooter =
+  location.pathname.startsWith('/admin') ||
+  location.pathname === '/message';
 
   return (
     <>

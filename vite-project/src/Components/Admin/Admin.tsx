@@ -13,10 +13,14 @@ import {
   User,
   LogOut,
   ChevronDown,
-  TrendingUp,
-  DollarSign,
-  Package2
 } from 'lucide-react';
+import ManageOrder from './ManageOrder';
+import ManageProducts from './ManageProducts';
+import Customers from './Customars';
+import Analytics from './Analytics';
+import NotFound from '../error/NotFound';
+import DashBoardPreview from './DashBoardPreview';
+import Setting from './Setting';
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,36 +28,7 @@ const Admin = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   // Sample data - পরে real API থেকে data আনতে পারবেন
-  const stats = [
-    {
-      title: 'Total Sales',
-      value: '৳২,৩৪,৫৬৭',
-      change: '+১২.৫%',
-      icon: DollarSign,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Orders',
-      value: '১,২৩৪',
-      change: '+৮.৭%',
-      icon: ShoppingCart,
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Products',
-      value: '৫৬৭',
-      change: '+৩.২%',
-      icon: Package2,
-      color: 'bg-purple-500'
-    },
-    {
-      title: 'Customers',
-      value: '৮৯০',
-      change: '+১৫.৩%',
-      icon: Users,
-      color: 'bg-orange-500'
-    }
-  ];
+
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -77,99 +52,48 @@ const Admin = () => {
     switch (activeTab) {
       case 'dashboard':
         return (
-          <div className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              {stats.map((stat, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                      <p className="text-sm text-green-600 flex items-center mt-1">
-                        <TrendingUp className="h-4 w-4 mr-1" />
-                        {stat.change}
-                      </p>
-                    </div>
-                    <div className={`${stat.color} p-3 rounded-lg`}>
-                      <stat.icon className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Charts and Tables Section */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
-                <div className="space-y-4">
-                  {[1, 2, 3, 4].map((item) => (
-                    <div key={item} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <Package className="h-5 w-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">Order #100{item}</p>
-                          <p className="text-sm text-gray-500">Customer {item}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">৳{item * 1000}</p>
-                        <p className="text-sm text-green-600">Completed</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Products</h3>
-                <div className="space-y-4">
-                  {[1, 2, 3, 4].map((item) => (
-                    <div key={item} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Package2 className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">Product {item}</p>
-                          <p className="text-sm text-gray-500">{item * 10} sold</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">৳{item * 500}</p>
-                        <p className="text-sm text-gray-500">Revenue</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <>
+            <DashBoardPreview />
+          </> 
         );
-      
+      case 'products':
+        return (
+          <>
+            <ManageProducts />
+          </>
+        );
+        case 'customers':
+        return (
+          <>
+            <Customers />
+          </>
+        );
+      case 'orders':
+        return (
+          <>
+            <ManageOrder />
+          </>
+        );
+
+        case 'analytics':
+        return (
+          <>
+            <Analytics />
+          </>
+        );
+
+        case 'settings':
+        return (
+          <>
+            <Setting />
+          </>
+        );
+
       default:
         return (
-          <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {menuItems.find(item => item.id === activeTab)?.label} Component
-              </h3>
-              <p className="text-gray-600 mb-4">
-                এখানে আপনার {menuItems.find(item => item.id === activeTab)?.label} component render হবে।
-              </p>
-              <div className="bg-gray-50 rounded-lg p-4 text-left">
-                <code className="text-sm text-gray-700">
-                  {`// Example import:\n// import ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}Component from './components/${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}Component';\n\n// Then render it here:\n// <${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}Component />`}
-                </code>
-              </div>
-            </div>
-          </div>
+          <>
+            <NotFound />
+          </>
         );
     }
   };

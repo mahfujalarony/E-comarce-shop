@@ -1,106 +1,225 @@
 import React from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Avatar, Button, Grid, Paper, Typography, Box } from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import EditIcon from '@mui/icons-material/Edit';
+import LockIcon from '@mui/icons-material/Lock';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import ComputerIcon from '@mui/icons-material/Computer';
+import StarIcon from '@mui/icons-material/Star';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
-interface AuthData {
-  name: string;
-  imgUrl?: string;
-}
+const menuItems = [
+  { icon: <ShoppingBagIcon color="primary" />, label: 'Orders', path: '/orders' },
+  { icon: <AssignmentIcon color="primary" />, label: 'Quote', path: '/account/quote' },
+  { icon: <EditIcon color="primary" />, label: 'Edit Profile', path: '/account/edit-profile' },
+  { icon: <LockIcon color="primary" />, label: 'Change Password', path: '/account/change-password' },
+  { icon: <LocationOnIcon color="primary" />, label: 'Addresses', path: '/account/addresses' },
+  { icon: <FavoriteIcon color="primary" />, label: 'Wish List', path: '/account/wishlist' },
+  { icon: <ComputerIcon color="primary" />, label: 'Saved PC', path: '/account/saved-pc' },
+  { icon: <StarIcon color="primary" />, label: 'Star Points', path: '/account/star-points' },
+  { icon: <MonetizationOnIcon color="primary" />, label: 'Your Transactions', path: '/account/transactions' },
+];
 
 const ManageAccount: React.FC = () => {
-    const navigate = useNavigate();
-    const { authData } = useAuth();
-    const { name, imgUrl } = authData as AuthData;
-    const user = {
-        name: name || 'User',
-        imgUrl: imgUrl || '',
-        starPoints: 0,
-        storeCredit: 0,
-    };
+  const navigate = useNavigate();
+  const { authData } = useAuth();
+  const { name, imgUrl, role } = authData;
 
-    const menuItems = [
-        { icon: '📦', label: 'Orders', path: '/orders' },
-        { icon: '📝', label: 'Quote', path: '/account/quote' },
-        { icon: '👤', label: 'Edit Profile', path: '/account/edit-profile' },
-        { icon: '🔒', label: 'Change Password', path: '/account/change-password' },
-        { icon: '📍', label: 'Addresses', path: '/account/addresses' },
-        { icon: '❤️', label: 'Wish List', path: '/account/wishlist' },
-        { icon: '💻', label: 'Saved PC', path: '/account/saved-pc' },
-        { icon: '⭐', label: 'Star Points', path: '/account/star-points' },
-        { icon: '💸', label: 'Your Transactions', path: '/account/transactions' },
-        { icon: '🛠️', label: 'Admin Panel', path: '/admin' },
-    ];
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100vw',
+        bgcolor: '#f5f5f5',
+        py: { xs: 1, md: 4 },
+        px: { xs: 1, md: 2 },
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'auto',
+      }}
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: '95%', md: 1000, lg: 1200 },
+          mx: 'auto',
+          p: { xs: 2, sm: 3, md: 4 },
+          borderRadius: { xs: 0, sm: 3 },
+          minHeight: { xs: '100vh', sm: 'auto', md: '90vh' },
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Admin Dashboard Button */}
+        {role === 'admin' && (
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<DashboardIcon />}
+            fullWidth
+            sx={{
+              mb: { xs: 2, md: 3 },
+              py: { xs: 1.5, md: 2 },
+              fontWeight: 'bold',
+              fontSize: { xs: '1rem', md: '1.1rem' },
+              letterSpacing: 1,
+              bgcolor: 'secondary.main',
+              '&:hover': { bgcolor: 'secondary.dark' },
+            }}
+            onClick={() => navigate('/admin')}
+          >
+            Admin Dashboard
+          </Button>
+        )}
 
-    return (
-        <div className="min-h-screen bg-gray-100 p-4">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-                {/* Header Section */}
-                <div className="flex items-center pb-4 border-b border-gray-200 mb-6">
-                    <div className="text-gray-500 mr-4">
-                        <span className="text-lg">/</span> Account
-                    </div>
-                </div>
+        {/* User Info */}
+        <Box 
+          display="flex" 
+          alignItems="center" 
+          mb={{ xs: 3, md: 4 }}
+          flexDirection={{ xs: 'column', sm: 'row' }}
+          textAlign={{ xs: 'center', sm: 'left' }}
+        >
+          <Avatar
+            src={imgUrl || undefined}
+            alt={name || 'User'}
+            sx={{ 
+              width: { xs: 80, md: 64 }, 
+              height: { xs: 80, md: 64 }, 
+              mr: { xs: 0, sm: 2 }, 
+              mb: { xs: 2, sm: 0 },
+              bgcolor: 'primary.main', 
+              fontSize: { xs: 40, md: 32 } 
+            }}
+          >
+            {!imgUrl && (name ? name[0] : 'U')}
+          </Avatar>
+          <Box>
+            <Typography variant="subtitle2" color="text.secondary">
+              Hello,
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+              {name || 'User'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Role: {role || 'user'}
+            </Typography>
+          </Box>
+        </Box>
 
-                {/* User Info Section */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mr-4">
-                            {imgUrl ? (
-                                <img 
-                                    src={imgUrl} 
-                                    alt={name} 
-                                    className="w-full h-full rounded-full object-cover"
-                                />
-                            ) : (
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-8 w-8 text-gray-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                    />
-                                </svg>
-                            )}
-                        </div>
-                        <div>
-                            <p className="text-gray-600">Hello,</p>
-                            <h2 className="text-xl font-semibold text-gray-800">{user.name}</h2>
-                        </div>
-                    </div>
-                    <div className="flex space-x-8 text-right">
-                        <div>
-                            <p className="text-gray-600">Star Points</p>
-                            <p className="text-lg font-bold text-red-500">{user.starPoints}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-600">Store Credit</p>
-                            <p className="text-lg font-bold text-red-500">{user.storeCredit}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Menu Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {menuItems.map((item, index) => (
-                        <div
-                            key={index}
-                            onClick={() => navigate(item.path)}
-                            className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow duration-200"
-                        >
-                            <div className="text-4xl mb-2">{item.icon}</div>
-                            <p className="text-sm font-medium text-gray-700">{item.label}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
+        {/* Menu Grid */}
+        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ flex: 1 }}>
+          {menuItems.map((item) => (
+            <Grid 
+              item 
+              xs={6} 
+              sm={4} 
+              md={3} 
+              lg={2.4}
+              key={item.label}
+            >
+              <Paper
+                elevation={1}
+                sx={{
+                  p: { xs: 1.5, sm: 2 },
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minHeight: { xs: 100, sm: 110, md: 120 },
+                  height: 'auto',
+                  borderRadius: 2,
+                  '&:hover': { 
+                    boxShadow: 6, 
+                    bgcolor: '#f0f0f0',
+                    transform: 'translateY(-2px)'
+                  },
+                }}
+                onClick={() => navigate(item.path)}
+              >
+                <Box sx={{ fontSize: { xs: 28, sm: 32 }, mb: 1 }}>
+                  {item.icon}
+                </Box>
+                <Typography 
+                  variant="body2" 
+                  fontWeight={500} 
+                  align="center"
+                  sx={{ 
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    lineHeight: 1.2,
+                    px: 0.5
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </Paper>
+            </Grid>
+          ))}
+          
+          {/* Non-admin users এর জন্য Admin Panel */}
+          {role !== 'admin' && (
+            <Grid 
+              item 
+              xs={6} 
+              sm={4} 
+              md={3} 
+              lg={2.4}
+            >
+              <Paper
+                elevation={2}
+                sx={{
+                  p: { xs: 1.5, sm: 2 },
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  border: '2px dashed #bdbdbd',
+                  bgcolor: '#fffde7',
+                  color: '#ff9800',
+                  minHeight: { xs: 100, sm: 110, md: 120 },
+                  borderRadius: 2,
+                  transition: 'all 0.3s ease',
+                  '&:hover': { 
+                    boxShadow: 6, 
+                    bgcolor: '#fff8e1',
+                    transform: 'translateY(-2px)'
+                  },
+                }}
+                onClick={() => navigate('/admin')}
+              >
+                <DashboardIcon 
+                  color="warning" 
+                  sx={{ fontSize: { xs: 28, sm: 32 }, mb: 1 }} 
+                />
+                <Typography 
+                  variant="body2" 
+                  fontWeight={700} 
+                  align="center"
+                  sx={{ 
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    lineHeight: 1.2,
+                    px: 0.5
+                  }}
+                >
+                  Admin Panel
+                </Typography>
+              </Paper>
+            </Grid>
+          )}
+        </Grid>
+      </Paper>
+    </Box>
+  );
 };
 
 export default ManageAccount;
