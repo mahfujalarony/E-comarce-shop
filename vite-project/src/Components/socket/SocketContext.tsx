@@ -80,7 +80,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     isRefreshingRef.current = true;
     lastRefreshTimeRef.current = Date.now();
     
-    console.log('Refreshing unread count for user:', userId);
+    //console.log('Refreshing unread count for user:', userId);
     socket.emit('unreadMessageBadge', userId);
     socket.emit('unreadLastMessageNotification', userId); // lastMessages রিফ্রেশ করুন
     
@@ -92,7 +92,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const handleOnlineUsers = (users: string[]) => {
       setOnlineUsers(users);
-      console.log('Online users in SocketContext:', users);
+      //console.log('Online users in SocketContext:', users);
     };
 
     const handleUnreadBadge = (data: UnreadMessageData) => {
@@ -105,8 +105,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setUnreadMessagesBySender(prevCounts => {
           const hasChanged = JSON.stringify(prevCounts) !== JSON.stringify(senderCounts);
           if (hasChanged) {
-            console.log('Updated unread messages by sender:', senderCounts);
-            console.log('Total unread count:', Object.values(senderCounts).reduce((total, count) => total + count, 0));
+           // console.log('Updated unread messages by sender:', senderCounts);
+            //console.log('Total unread count:', Object.values(senderCounts).reduce((total, count) => total + count, 0));
             return senderCounts;
           }
           return prevCounts;
@@ -119,7 +119,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const handleLastMessage = ({ status, lastMessages, error }: LastMessageData) => {
       if (status === 'success') {
         setLastMessages(lastMessages); // lastMessages স্টেটে সেট করুন
-        console.log('Last unread messages:', lastMessages);
+        //console.log('Last unread messages:', lastMessages);
       } else {
         console.error('Error in last unread message notification:', error);
       }

@@ -5,7 +5,6 @@ import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface FormData {
-  userId: string | null;
   fullName: string;
   street: string;
   city: string;
@@ -23,7 +22,7 @@ const AddressForm = () => {
   const userId: string | null = authData?.userId || null;
   console.log("id", userId);
   const [formData, setFormData] = useState<FormData>({
-    userId,
+
     fullName: '',
     street: '',
     city: '',
@@ -48,15 +47,17 @@ const AddressForm = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!userId) {
-      setError('User not authenticated. Please log in.');
-      return;
-    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      await axios.post('http://localhost:3001/api/create', formData);
+      await axios.post('http://localhost:3001/api/create', formData, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
       setIsLoading(false);
       setShowPopup(true);
       setTimeout(() => {
@@ -64,7 +65,6 @@ const AddressForm = () => {
         navigate(-1);
       }, 2000);
       setFormData({
-        userId,
         fullName: '',
         street: '',
         city: '',

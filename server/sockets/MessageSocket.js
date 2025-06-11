@@ -5,13 +5,13 @@ const onlineUsers = new Map();
 
 const socketHandler = (io) => {
   io.on('connection', (socket) => {
-    console.log('User connected: ' + socket.id);
+   // console.log('User connected: ' + socket.id);
 
     const userId = socket.handshake.query.userId;
     if (userId && userId !== 'undefined' && !onlineUsers.has(userId)) {
       onlineUsers.set(userId, socket.id);
       socket.join(userId);
-      console.log(`User ${userId} mapped to socket ${socket.id}`);
+     // console.log(`User ${userId} mapped to socket ${socket.id}`);
       io.emit('onlineUsersUpdate', Array.from(onlineUsers.keys()));
     }
 
@@ -61,7 +61,7 @@ const socketHandler = (io) => {
               senderCounts,
             });
 
-            console.log(`Updated unread count for user ${receiverId}: ${unreadCount}`);
+            //console.log(`Updated unread count for user ${receiverId}: ${unreadCount}`);
           }
         }
       } catch (error) {
@@ -102,7 +102,7 @@ const socketHandler = (io) => {
           senderCounts, // প্রতি সেন্ডারের মেসেজ সংখ্যা
         });
 
-        console.log(`Unread messages for user ${userId}: ${unreadCount}, unique senders: ${uniqueSenders.length}`);
+        //console.log(`Unread messages for user ${userId}: ${unreadCount}, unique senders: ${uniqueSenders.length}`);
       } catch (error) {
         console.error('Error fetching unread messages:', error);
         socket.emit('unreadMessageBadgeUpdate', {
@@ -197,7 +197,7 @@ const socketHandler = (io) => {
       lastMessages,
     });
 
-    console.log(`Last unread messages for user ${userId}: ${lastMessages.length} notifications sent`);
+    //console.log(`Last unread messages for user ${userId}: ${lastMessages.length} notifications sent`);
   } catch (error) {
     console.error('Error fetching last unread messages:', error);
     socket.emit('unreadLastMessageNotificationUpdate', {
@@ -339,7 +339,7 @@ socket.on('sendMessage', async ({ senderId, receiverId, message }, callback) => 
     // User offline event
     socket.on('userOffline', (userId) => {
       onlineUsers.delete(userId);
-      console.log(`User ${userId} is offline. Online users: ${onlineUsers.size}`);
+      //console.log(`User ${userId} is offline. Online users: ${onlineUsers.size}`);
       io.emit('onlineUsersUpdate', Array.from(onlineUsers.keys()));
     });
 

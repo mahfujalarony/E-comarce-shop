@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: false },
+  password: { type: String, required: false }, // গুগল লগইনের জন্য false করা হয়েছে
   imgUrl: { type: String, required: false },
   role: { 
     type: String, 
@@ -15,7 +15,9 @@ const userSchema = new mongoose.Schema({
 
 // Password hash করার জন্য pre-save middleware
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password') || !this.password) return next();
+  if (!this.isModified('password') || !this.password) { // যদি পাসওয়ার্ড পরিবর্তন না হয় বা পাসওয়ার্ড না থাকে
+    return next();
+  }
   
   try {
     const salt = await bcrypt.genSalt(10);
@@ -26,9 +28,11 @@ userSchema.pre('save', async function(next) {
   }
 });
 
+// --- এই মেথডটি যোগ করুন ---
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  if (!this.password) return false;
-  return await bcrypt.compare(candidatePassword, this.password);
+  if (!this.password) return false; // যদি ইউজারের পাসওয়ার্ড সেট করা না থাকে
+  return bcrypt.compare(candidatePassword, this.password);
 };
+// --- এই পর্যন্ত ---
 
 module.exports = mongoose.model('User', userSchema);

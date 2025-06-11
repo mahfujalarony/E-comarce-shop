@@ -11,6 +11,7 @@ interface Product {
   quantity?: number;
   price?: number;
   image?: string;
+  totalPrice?: number;
 }
 
 interface Order {
@@ -21,6 +22,7 @@ interface Order {
 
 const MyOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  console.log('orders', orders);
   const [hasFetched, setHasFetched] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -115,6 +117,7 @@ const MyOrders: React.FC = () => {
               const productName = product.productId?.name || 'Unknown Product';
               const quantity = product.quantity || 0;
               const price = product.price || 0;
+            //  const totalPrice = product.totalPrice || price * quantity;
               const productId = product.productId?._id || 'Unknown ID';
               const image = product.image || 'https://via.placeholder.com/150';
               const status = order.status || 'unknown';
@@ -140,21 +143,24 @@ const MyOrders: React.FC = () => {
                       <div className="mt-1 text-sm text-gray-600 space-y-1">
                         <p>Quantity: {quantity}</p>
                         <p>Price: ${price.toFixed(2)}</p>
+                        <p> TotalPrice: ${price.toFixed(2)}</p>
                         <div className="flex items-center mt-2">
                           <span className="mr-2">Status:</span>
-                          <span
+                            <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : status === 'shipped'
-                                ? 'bg-blue-100 text-blue-800'
-                                : status === 'delivered'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : status === 'processing'
+                              ? 'bg-orange-100 text-orange-800'
+                              : status === 'shipped'
+                              ? 'bg-blue-100 text-blue-800'
+                              : status === 'delivered'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
                             }`}
-                          >
+                            >
                             {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </span>
+                            </span>
                         </div>
                       </div>
                     </div>

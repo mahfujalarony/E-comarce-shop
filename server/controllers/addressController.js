@@ -2,9 +2,11 @@ import Address from '../model/addressModel.js';
 
 export const createAddress = async (req, res) => {
   try {
-    const newAddress = new Address(req.body);
-    const address = await Address.find();
-    if(address.length > 0) {
+    const userId = req.user._id; // Assuming user ID is stored in req.user after authentication
+    console.log('User ID:', userId);
+    const newAddress = new Address({ ...req.body, userId });
+    const address = await Address.find({ userId });
+    if (address.length > 0) {
       return res.status(400).json({ message: 'User already has an address' });
     }
     const savedAddress = await newAddress.save();
@@ -16,7 +18,9 @@ export const createAddress = async (req, res) => {
 
 export const getAddresses = async (req, res) => {
   try {
-    const { userId } = req.query;
+    //const { userId } = req.query;
+    const userId = req.user._id; // Assuming user ID is stored in req.user after authentication
+    console.log('User ID:', userId);
     if (userId) {
       const addresses = await Address.find({ userId });
       return res.status(200).json(addresses);
@@ -30,8 +34,8 @@ export const getAddresses = async (req, res) => {
 
 export const deleteAddress = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const deletedAddress = await Address.findOneAndDelete({ userId });
+    const userId = req.user._id; 
+    const deletedAddress = await Address.findOneAndDelete({ userId: userId, _id: req.params.id });
     if (!deletedAddress) {
       return res.status(404).json({ message: 'Address not found' });
     }

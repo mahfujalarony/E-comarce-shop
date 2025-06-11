@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { reqmakeadmin, fetchUsers, fetchAllProducts, UpdateProduct, DeleteProduct } = require('../controllers/adminController');
+const { reqmakeadmin, fetchUsers, fetchAllProducts, UpdateProduct, DeleteProduct, fetchOrders } = require('../controllers/adminController');
 const { protect, isAdmin } = require('../auth/authMiddleware');
 
 router.post('/reqmakeadmin', protect, reqmakeadmin);
@@ -9,7 +9,7 @@ router.post('/reqmakeadmin', protect, reqmakeadmin);
 // Fetch all admin requests
 router.get('/fetchUsers', protect, isAdmin, fetchUsers);
 router.get('/fetchProducts', fetchAllProducts);
-router.get('/fetchOrders', fetchOrders);
+router.get('/fetchOrders', protect, isAdmin, fetchOrders);
 
 
 // Update for admin

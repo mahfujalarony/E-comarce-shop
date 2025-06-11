@@ -3,6 +3,8 @@ require('dotenv').config();
 const User = require('../model/UserModel');
 const Product = require('../model/productsModel');
 const Review = require('../model/Review');
+const Order = require('../model/Order');
+const Address = require('../model/addressModel');
 
 const makeAdminLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -146,6 +148,95 @@ res.status(200).json({
 
 
 
+
+// ...existing code...
+exports.fetchOrders = async (req, res) => {
+  try {
+    //fetch per 50 orders per page
+    const page = parseInt(req.query.page) || 1;
+    const limit = 50; // Fixed limit of 50 orders per page
+    const skip = (page - 1) * limit;
+
+    const totalOrders = await Order.countDocuments();
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const ordersFromDB = await Order.find()
+      .populate('userId', 'name email imgUrl')
+      .populate({
+        path: 'product.productId', // Order স্কিমাতে product একটি অবজেক্ট এবং তার ভেতরে productId আছে
+        select: 'name price oldPrice images discount category inStock createdAt'
+      })
+      .populate('addressId') // addressId দিয়ে সম্পূর্ণ ঠিকানা populate করা হচ্ছে
+      .sort({ createdAt: -1 })
+      .skip(skip) // কতগুলো ডকুমেন্ট স্কিপ করতে হবে
+      .limit(limit) // প্রতি পৃষ্ঠায় কতগুলো ডকুমেন্ট লোড করতে হবে
+      .lean(); // .lean() ব্যবহার করলে Mongoose ডকুমেন্ট অবজেক্টের পরিবর্তে সাধারণ JavaScript অবজেক্ট পাওয়া যায়, যা মডিফাই করা সহজ
+
+    const formattedOrders = ordersFromDB.map(order => {
+      // product.productId থেকে প্রোডাক্টের তথ্য অর্ডারের মূল লেভেলে আনা হচ্ছে
+      const productDetails = order.product && order.product.productId ? {
+        productName: order.product.productId.name,
+        productPrice: order.product.productId.price,
+        productOldPrice: order.product.productId.oldPrice,
+        productImages: order.product.productId.images,
+        productDiscount: order.product.productId.discount,
+        productCategory: order.product.productId.category,
+        productInStock: order.product.productId.inStock,
+        // ... অন্যান্য প্রোডাক্ট ফিল্ড ...
+        quantity: order.product.quantity, // অর্ডারের product অবজেক্ট থেকে quantity
+        orderedProductPrice: order.product.price, // অর্ডারের product অবজেক্ট থেকে price (অর্ডার করার সময়ের দাম)
+        orderedProductImage: order.product.image // অর্ডারের product অবজেক্ট থেকে image
+      } : {};
+
+      // addressId থেকে ঠিকানার তথ্য অর্ডারের মূল লেভেলে আনা হচ্ছে
+      const addressDetails = order.addressId ? {
+        addressFullName: order.addressId.fullName,
+        addressStreet: order.addressId.street,
+        addressCity: order.addressId.city,
+        addressDistrict: order.addressId.district,
+        addressThana: order.addressId.thana,
+        addressLandmark: order.addressId.landmark,
+        addressHouse: order.addressId.house,
+        addressPhone: order.addressId.phone,
+        addressCountry: order.addressId.country,
+      } : {};
+
+      // userId থেকে ইউজারের তথ্য
+      const userDetails = order.userId ? {
+        userName: order.userId.name,
+        userEmail: order.userId.email,
+        userImgUrl: order.userId.imgUrl,
+      } : {};
+
+      return {
+        _id: order._id, // Order ID
+        orderStatus: order.status,
+        orderTotalAmount: order.totalAmount,
+        orderCreatedAt: order.createdAt,
+        // ... অন্যান্য অর্ডার ফিল্ড ...
+
+        ...userDetails,    // ইউজার ডিটেইলস
+        ...productDetails, // প্রোডাক্ট ডিটেইলস
+        ...addressDetails, // অ্যাড্রেস ডিটেইলস
+      };
+    });
+
+    res.status(200).json({
+      error: false,
+      message: 'Orders fetched successfully.',
+      data: formattedOrders, // পরিবর্তিত ফরম্যাটের ডেটা পাঠানো হচ্ছে
+      totalPages: totalPages, // মোট কতগুলো পৃষ্ঠা আছে
+      currentPage: page       // বর্তমান পৃষ্ঠা নম্বর
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Internal server error while fetching orders.'
+    });
+  }
+};
+// ...existing code...
 
 
 

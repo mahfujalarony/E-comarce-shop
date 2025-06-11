@@ -18,10 +18,10 @@ const menuItems = [
   { icon: <AssignmentIcon color="primary" />, label: 'Quote', path: '/account/quote' },
   { icon: <EditIcon color="primary" />, label: 'Edit Profile', path: '/account/edit-profile' },
   { icon: <LockIcon color="primary" />, label: 'Change Password', path: '/account/change-password' },
-  { icon: <LocationOnIcon color="primary" />, label: 'Addresses', path: '/account/addresses' },
-  { icon: <FavoriteIcon color="primary" />, label: 'Wish List', path: '/account/wishlist' },
-  { icon: <ComputerIcon color="primary" />, label: 'Saved PC', path: '/account/saved-pc' },
-  { icon: <StarIcon color="primary" />, label: 'Star Points', path: '/account/star-points' },
+  { icon: <LocationOnIcon color="primary" />, label: 'Addresses', path: '/addresses' },
+  { icon: <FavoriteIcon color="primary" />, label: 'Wish List', path: '/wishlist' },
+  // { icon: <ComputerIcon color="primary" />, label: 'Saved Products', path: '/wishlist' },
+  // { icon: <StarIcon color="primary" />, label: 'Star Points', path: '/account/star-points' },
   { icon: <MonetizationOnIcon color="primary" />, label: 'Your Transactions', path: '/account/transactions' },
 ];
 

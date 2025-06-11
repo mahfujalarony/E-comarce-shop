@@ -12,10 +12,16 @@ const orderSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     image: { type: String }
   },
+  
+  addressId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Address',
+    required: true
+  },
   totalAmount: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['pending', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
     default: 'pending'
   }
 }, { timestamps: true });

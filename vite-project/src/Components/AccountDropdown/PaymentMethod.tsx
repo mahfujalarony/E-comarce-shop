@@ -9,7 +9,7 @@ import SimpleAlert from '../ui/SuccessAlert';
 
 
 interface Address {
-  id: string;
+  _id: string;
   fullName: string;
   district: string;
   thana: string;
@@ -40,6 +40,7 @@ const CardPayment = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
+ // console.log(addresses);
   const [error, setError] = useState<string | null>(null);
   const [showNoAddressPopup, setShowNoAddressPopup] = useState(false);
   const [showCODConfirmationPopup, setShowCODConfirmationPopup] = useState(false);
@@ -51,11 +52,20 @@ const CardPayment = () => {
 const confirmCashOnDelivery = async () => {
   setIsProcessing(true);
   try {
-    await axios.post('http://localhost:3001/api/cash-on-delivery', {
-      userId,
+    await axios.post(
+      'http://localhost:3001/api/cash-on-delivery',
+      {
       id,
       quantity,
-    });
+      addressId: addresses[0]?._id, // Sending the address ID
+      },
+      {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      },
+      }
+    );
     setIsProcessing(false);
     setShowCODConfirmationPopup(false);
     setShowSuccessAlert(true); // SimpleAlert দেখানোর জন্য
@@ -83,14 +93,17 @@ const confirmCashOnDelivery = async () => {
   }, [cardNumber]);
 
   useEffect(() => {
-    if (!userId) {
-      setError('User not authenticated. Please log in.');
-      return;
-    }
 
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/getaddress?userId=${userId}`);
+        const response = await axios.get(`http://localhost:3001/api/getaddress`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        }
+          }
+        );
         setAddresses(response.data);
       } catch (error) {
         console.error('Error fetching address:', error);
@@ -103,7 +116,12 @@ const confirmCashOnDelivery = async () => {
 
   const handleDeleteAddress = async () => {
     try {
-      await axios.delete(`http://localhost:3001/api/delete/${userId}`);
+      await axios.delete(`http://localhost:3001/api/delete/${addresses[0]?._id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
       setAddresses([]);
       setError(null);
     } catch (error) {
@@ -113,10 +131,10 @@ const confirmCashOnDelivery = async () => {
   };
 
   const cashOnDelivery = () => {
-    if (!userId) {
-      setError('User not authenticated. Please log in.');
-      return;
-    }
+    // if (!userId) {
+    //   setError('User not authenticated. Please log in.');
+    //   return;
+    // }
     if (isNaN(price) || price <= 0) {
       setError('Invalid price value.');
       return;
@@ -150,10 +168,10 @@ const confirmCashOnDelivery = async () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!userId) {
-      setError('User not authenticated. Please log in.');
-      return;
-    }
+    // if (!userId) {
+    //   setError('User not authenticated. Please log in.');
+    //   return;
+    // }
     if (isNaN(price) || price <= 0) {
       setError('Invalid price value.');
       return;
@@ -220,45 +238,11 @@ const confirmCashOnDelivery = async () => {
         </div>
       )}
 
-      {/* COD Confirmation Popup */}
-      {/* {showCODConfirmationPopup && addresses.length > 0 && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center animate-fadeIn max-w-sm">
-            <FaExclamationTriangle className="text-yellow-500 text-4xl mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800">Confirm Cash on Delivery</h3>
-            <p className="text-sm text-gray-600 mt-2 text-center">
-              Are you sure you want to proceed with Cash on Delivery?
-            </p>
-            <div className="text-sm text-gray-600 mt-4">
-              <p><strong>Delivery Address:</strong></p>
-              <p>{addresses[0].fullName}</p>
-              <p>{addresses[0].house}, {addresses[0].street}</p>
-              <p>{addresses[0].thana}, {addresses[0].district}, {addresses[0].city}</p>
-              <p><strong>Phone:</strong> {addresses[0].phone}</p>
-              {addresses[0].landmark && <p><strong>Landmark:</strong> {addresses[0].landmark}</p>}
-            </div>
-            <div className="flex space-x-4 mt-6">
-              <button
-                onClick={() => setShowCODConfirmationPopup(false)}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmCashOnDelivery}
-                className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
 
-{showCODConfirmationPopup && addresses.length > 0 && (
+      {showCODConfirmationPopup && addresses.length > 0 && (
         <AlertDialog
           open={showCODConfirmationPopup}
-          address={addresses[0]}
+          address ={addresses[0]}
           onClose={() => setShowCODConfirmationPopup(false)}
           onConfirm={confirmCashOnDelivery}
         />

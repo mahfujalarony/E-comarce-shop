@@ -4,7 +4,7 @@ const User = require("../model/UserModel");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const otpStore = {}; 
+const otpStore = {};
 
 exports.sendOTP = async (req, res) => {
   const { email } = req.body;
@@ -15,9 +15,9 @@ exports.sendOTP = async (req, res) => {
   if (existingUser) {
     return res.status(409).json({ error: "This email is already registered" });
   }
-  
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 2 * 60 * 1000; 
+  const expiresAt = Date.now() + 2 * 60 * 1000;
 
   otpStore[email] = {
     otp,
@@ -73,15 +73,15 @@ exports.verifyOTPAndRegister = async (req, res) => {
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const hashedPassword = await bcrypt.hash(password, 10); // --- এই লাইনটি সরানো হয়েছে ---
     const newUser = new User({
       name,
       email,
-      password: hashedPassword,
+      password: password, // --- প্লেইন টেক্সট পাসওয়ার্ড ব্যবহার করা হচ্ছে ---
       imgUrl,
     });
 
-    await newUser.save();
+    await newUser.save(); // pre('save') হুক এখন হ্যাশ করবে
     delete otpStore[email];
 
     const jwtToken = jwt.sign(
@@ -139,9 +139,22 @@ exports.verifyOTP = (req, res) => {
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log('email', email, 'password', password);
   try {
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
+    console.log('user', user);
+    if (!user) {
+      return res.status(401).json({ message: 'User Not Found' });
+    }
+
+    // If user registered via Google, password will be empty
+    if (!user.password) {
+      return res.status(400).json({ message: 'Password not set. Please login with Google or reset your password.' });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    console.log('isMatch', isMatch);
+    if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -167,7 +180,6 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 exports.resetPasswordSendOTP = async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -177,9 +189,9 @@ exports.resetPasswordSendOTP = async (req, res) => {
   if (!existingUser) {
     return res.status(409).json({ error: "No account found with this email !" });
   }
-  
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 2 * 60 * 1000; 
+  const expiresAt = Date.now() + 2 * 60 * 1000;
 
   otpStore[email] = {
     otp,
@@ -247,9 +259,9 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
-    user.password = hashed;
-    await user.save();
+    // const hashed = await bcrypt.hash(newPassword, 10); // --- এই লাইনটি সরানো হয়েছে ---
+    user.password = newPassword; // --- প্লেইন টেক্সট পাসওয়ার্ড ব্যবহার করা হচ্ছে ---
+    await user.save(); // pre('save') হুক এখন হ্যাশ করবে
 
     res.json({ message: "Password reset successfully" });
   } catch (err) {
@@ -267,7 +279,7 @@ exports.googleLogin = async (req, res) => {
       user = new User({
         name,
         email,
-        password: "",
+        password: "", // গুগল লগইনের জন্য পাসওয়ার্ড খালি থাকবে, pre('save') হুক এটি হ্যান্ডেল করবে
         imgUrl,
       });
       await user.save();
@@ -334,29 +346,29 @@ exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
     // টোকেন পার্স করা
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: 'No token provided' 
+        message: 'No token provided'
       });
     }
 
     // টোকেন যাচাই
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'yourSecretKey');
-    
+
     // ইউজার খোঁজা
     const user = await User.findById(decoded.userId).select('name email imgUrl _id role');
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: 'User not found' 
+        message: 'User not found'
       });
     }
 
     // নতুন টোকেন জেনারেট
     const newToken = jwt.sign(
-      { 
-        userId: user._id, 
-        email: user.email 
+      {
+        userId: user._id,
+        email: user.email
       },
       process.env.JWT_SECRET || 'yourSecretKey',
       { expiresIn: '7d' }
@@ -380,23 +392,56 @@ exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
     console.error('Token validation error:', error);
 
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: 'Token expired' 
-      });
-    }
-    
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid token' 
+        message: 'Token expired'
       });
     }
 
-    return res.status(500).json({ 
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    return res.status(500).json({
       success: false,
       message: 'Server error',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
+
+
+// change password
+exports.changePassword = async(req, res) => {
+  const userId = req.user._id;
+  const {  currentPassword,  newPassword,  confirmPassword } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if(user.email && !user.password) {
+    return res.status(400).json({ message: 'Password not found because you logged in using Google OAuth' });
+
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: 'Current password is incorrect' });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: 'Passwords do not match' });
+  }
+
+  // user.password = await bcrypt.hash(newPassword, 10); // --- এই লাইনটি সরানো হয়েছে ---
+  user.password = newPassword; // --- প্লেইন টেক্সট পাসওয়ার্ড ব্যবহার করা হচ্ছে ---
+  await user.save(); // pre('save') হুক এখন হ্যাশ করবে
+
+  res.status(200).json({ message: 'Password changed successfully' });
+}

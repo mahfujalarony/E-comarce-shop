@@ -18,7 +18,7 @@ import ManageAccount from './Components/AccountDropdown/ManageAccount.tsx';
 import MyOrders from './Components/AccountDropdown/MyOrders.tsx';
 import MyReviews from './Components/AccountDropdown/MyReviws.tsx';
 import OrderReturn from './Components/AccountDropdown/OrderReturn.tsx';
-import Payment from './Components/AccountDropdown/Pyment.tsx';
+import Payment from '../../backup-code/Pyment.tsx';
 import Refer from './Components/AccountDropdown/Refer.tsx';
 import WishList from './Components/AccountDropdown/WishList.tsx';
 import HelpCenter from './Components/AccountDropdown/HelpCenter.tsx';
@@ -28,11 +28,16 @@ import ProductDetails from './Components/product/ProductDetails.tsx';
 import ReviewComponent from './Components/product/ReviewComponent.tsx';
 import Messages from './Components/Main/Message.tsx';
 import UnreadMessageNotification from './Components/ui/MessageNotification.tsx';
+import ViewAddress from './Components/AccountDropdown/ViewAddress.tsx';
 
 import Admin from './Components/Admin/Admin.tsx'; 
 import RequestAdmin from './Components/Admin/RequestAdmin.tsx'; 
 import InsertOne from './Components/Admin/InsertOne.tsx';
 import AdminOnlyRoute from './Components/PrivateRoute/AdminOnlyRoute.tsx';
+
+
+// setting somthing
+import ChangePass from './Components/ui/ChangePass.tsx';
 
 
 
@@ -44,7 +49,7 @@ function AppWrapper() {
   const { authData } = useAuth();
   const { onlineUsers } = useSocket();
   const senderId = authData?.userId;
-  console.log('senderId', senderId);
+  //console.log('senderId', senderId);
 
   useEffect(() => {
     if (senderId) {
@@ -81,12 +86,14 @@ const shouldHideFooter =
         <Route path="*" element={<NotFound />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/account" element={<ManageAccount />} />
+        <Route path="/account/change-password" element={<ChangePass />}/>
         <Route path="/orders" element={<MyOrders />} />
         <Route path="/wishlist" element={<WishList />} />
         <Route path="/payment-methods/:id" element={<Payment />} />
         <Route path="/returns" element={<OrderReturn />} />
         <Route path="/refer" element={<Refer />} />
         <Route path="/support" element={<HelpCenter />} />
+        <Route path="/addresses" element={<ViewAddress />} />
         <Route path="/reviews" element={<MyReviews />} />
         <Route path="/details/:id" element={<ProductDetails />} />
         <Route path="/details/payment/:id" element={<CardPayment />} />

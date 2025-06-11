@@ -9,7 +9,8 @@ const {
   resetPasswordVerifyOTP,
   resetPassword,
   isAdminCkk,
-  checkTokenValidAndResetLocalStorage
+  checkTokenValidAndResetLocalStorage,
+  changePassword
 } = require("../controllers/authController");
 
 const { protect, isAdmin } = require("../auth/authMiddleware");
@@ -29,6 +30,10 @@ router.post("/google", googleLogin);
 router.post("/reset-password-send-otp", resetPasswordSendOTP);
 router.post("/reset-password-verify-otp", resetPasswordVerifyOTP);
 router.post("/reset-password", resetPassword);
+
+
+//Change Password Route
+router.post("/change-password", protect, changePassword); 
 
 
 // Role Ckk Router
