@@ -40,11 +40,13 @@ const Login: React.FC = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         setAuthData({
+          userId: response.data.user._id, // <-- এই লাইনটি যোগ করুন
           email,
           password,
           isAuthenticated: true,
           name: response.data.user.name,
           imgUrl: response.data.user.imgUrl,
+          role: response.data.user.role,
         });
         navigate("/");
       } else {
@@ -75,10 +77,12 @@ const Login: React.FC = () => {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setAuthData({
+        userId: res.data.user._id, // <-- এই লাইনটি যোগ করুন
         email: user.email,
         isAuthenticated: true,
         name: user.displayName,
         imgUrl: user.photoURL,
+        role: res.data.user.role,
       });
       setSuccessMessage("Login Successful with Google!");
       navigate("/");

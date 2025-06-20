@@ -85,7 +85,14 @@ exports.verifyOTPAndRegister = async (req, res) => {
     delete otpStore[email];
 
     const jwtToken = jwt.sign(
-      { userId: newUser._id, email: newUser.email },
+      {
+        name: newUser.name,
+        userId: newUser._id,
+        email: newUser.email,
+        imgUrl: newUser.imgUrl,
+        role: newUser.role
+      
+      },
       process.env.JWT_SECRET || "yourSecretKey",
       { expiresIn: "7d" }
     );
@@ -153,13 +160,19 @@ exports.loginUser = async (req, res) => {
     }
 
     const isMatch = await user.comparePassword(password);
-    console.log('isMatch', isMatch);
+  
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const jwtToken = jwt.sign(
-      { userId: user._id, email: user.email },
+      { 
+        name: user.name,
+        userId: user._id, 
+        email: user.email,
+        imgUrl: user.imgUrl,
+        role: user.role
+      },
       process.env.JWT_SECRET || "yourSecretKey",
       { expiresIn: "7d" }
     );
@@ -285,7 +298,15 @@ exports.googleLogin = async (req, res) => {
       await user.save();
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ 
+
+      name: user.name, 
+      userId: user._id, 
+      email: user.email, 
+      imgUrl: user.imgUrl , 
+      role: user.role 
+    
+    }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -367,8 +388,11 @@ exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
     // নতুন টোকেন জেনারেট
     const newToken = jwt.sign(
       {
+        name: user.name,
         userId: user._id,
-        email: user.email
+        email: user.email,
+        imgUrl: user.imgUrl,
+        role: user.role
       },
       process.env.JWT_SECRET || 'yourSecretKey',
       { expiresIn: '7d' }

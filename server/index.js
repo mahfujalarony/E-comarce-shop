@@ -17,7 +17,8 @@ const OrderRouter = require('./routers/orderRouter');
 const wishlistRouter = require('./routers/wishListRouter');
 const messageRouter = require('./routers/messageRouter');
 const adminRouter = require('./routers/adminRouter'); 
-const messageSocket = require('./sockets/MessageSocket');
+//const messageSocket = require('./sockets/MessageSocket');
+const messageSocket = require('./sockets/Messages');
 
 const app = express();
 const server = http.createServer(app); // ✅ ঠিক জায়গায় একবার createServer
@@ -28,6 +29,7 @@ const io = socketIo(server, {
   }
 });
 
+//messageSocket(io); // Socket setup
 messageSocket(io); // Socket setup
 
 // Middleware

@@ -66,7 +66,7 @@ const Messages: React.FC = () => {
     return distanceFromBottom < 100;
   }, []);
 
-  // ✅ Handle scroll events
+ 
   const handleScroll = useCallback(() => {
     const isNear = checkIfNearBottom();
     setIsNearBottom(isNear);

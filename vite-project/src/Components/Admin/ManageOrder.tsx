@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import LoadingSpinner from '../ui/LoadingSpinner'; 
 import { FaUser, FaBox, FaMapMarkerAlt, FaSpinner, FaSearch } from 'react-icons/fa';
 
 interface FormattedOrder {
@@ -200,14 +201,7 @@ const ManageOrder: React.FC = () => {
 
   // Loading state
   if (loading && orders.length === 0) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <FaSpinner className="animate-spin text-blue-500 text-4xl mx-auto mb-4" />
-          <p className="text-gray-600">Loading order data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading orders..." className="mt-20" />;
   }
 
   // Error state

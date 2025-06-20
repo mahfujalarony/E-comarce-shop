@@ -85,7 +85,7 @@ exports.reqmakeadmin = [
 
 exports.fetchUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: 'user' }).select('name email role createdAt');
+    const users = await User.find({ role: 'user' }).select('name email role createdAt updatedAt imgUrl');
     res.status(200).json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -237,6 +237,48 @@ exports.fetchOrders = async (req, res) => {
   }
 };
 // ...existing code...
+
+
+
+// Controller function to fetch a user's profile including orders, address, and product details
+exports.fetchUserProfile = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('get userid', userId);
+
+    const user = await User.findById(userId)
+      .select('name email imgUrl role createdAt updatedAt');
+
+    const userOrders = await Order.find({ userId })
+      .select('status totalAmount product createdAt updatedAt')
+      .populate('product.productId', 'name price images');
+
+    const userAddress = await Address.findOne({ userId })
+      .select('fullName street city district thana landmark house phone country createdAt updatedAt');
+
+    const userReviews = await Review.find({ userId })
+      .select('productId rating review likes createdAt updatedAt');
+
+    res.status(200).json({
+      success: true,
+      message: 'User profile fetched successfully.',
+      data: {
+        user: user || null,
+        address: userAddress || null,
+        orders: userOrders || [],
+        reviews: userReviews || []
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Something went wrong while fetching the user profile.',
+      error: error.message
+    });
+  }
+};
 
 
 

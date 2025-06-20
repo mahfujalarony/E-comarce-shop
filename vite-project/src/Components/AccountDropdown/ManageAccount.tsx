@@ -1,224 +1,96 @@
 import React from 'react';
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from '../auth/AuthContext'; // Ensure this path is correct
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Button, Grid, Paper, Typography, Box } from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import EditIcon from '@mui/icons-material/Edit';
-import LockIcon from '@mui/icons-material/Lock';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ComputerIcon from '@mui/icons-material/Computer';
-import StarIcon from '@mui/icons-material/Star';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import AssignmentIcon from '@mui/icons-material/Assignment';
+import {
+  FaShoppingBag,
+  FaFileAlt, // Using FaFileAlt for AssignmentIcon (Quote)
+  FaEdit,
+  FaLock,
+  FaMapMarkerAlt,
+  FaHeart,
+  FaMoneyBillWave,
+  FaTachometerAlt, // Using FaTachometerAlt for DashboardIcon
+} from 'react-icons/fa';
 
+// Define menuItems with React Icons and Tailwind classes for icon color
 const menuItems = [
-  { icon: <ShoppingBagIcon color="primary" />, label: 'Orders', path: '/orders' },
-  { icon: <AssignmentIcon color="primary" />, label: 'Quote', path: '/account/quote' },
-  { icon: <EditIcon color="primary" />, label: 'Edit Profile', path: '/account/edit-profile' },
-  { icon: <LockIcon color="primary" />, label: 'Change Password', path: '/account/change-password' },
-  { icon: <LocationOnIcon color="primary" />, label: 'Addresses', path: '/addresses' },
-  { icon: <FavoriteIcon color="primary" />, label: 'Wish List', path: '/wishlist' },
-  // { icon: <ComputerIcon color="primary" />, label: 'Saved Products', path: '/wishlist' },
-  // { icon: <StarIcon color="primary" />, label: 'Star Points', path: '/account/star-points' },
-  { icon: <MonetizationOnIcon color="primary" />, label: 'Your Transactions', path: '/account/transactions' },
+  { icon: <FaShoppingBag className="text-blue-600" />, label: 'Orders', path: '/orders' },
+  { icon: <FaFileAlt className="text-blue-600" />, label: 'Quote', path: '/account/quote' },
+  { icon: <FaEdit className="text-blue-600" />, label: 'Edit Profile', path: '/account/edit-profile' },
+  { icon: <FaLock className="text-blue-600" />, label: 'Change Password', path: '/account/change-password' },
+  { icon: <FaMapMarkerAlt className="text-blue-600" />, label: 'Addresses', path: '/addresses' },
+  { icon: <FaHeart className="text-blue-600" />, label: 'Wish List', path: '/wishlist' },
+  { icon: <FaMoneyBillWave className="text-blue-600" />, label: 'Your Transactions', path: '/account/transactions' },
 ];
 
 const ManageAccount: React.FC = () => {
   const navigate = useNavigate();
   const { authData } = useAuth();
-  const { name, imgUrl, role } = authData;
+  const name = authData?.name;
+  const imgUrl = authData?.imgUrl;
+  const role = authData?.role;
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        width: '100vw',
-        bgcolor: '#f5f5f5',
-        py: { xs: 1, md: 4 },
-        px: { xs: 1, md: 2 },
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'auto',
-      }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          width: '100%',
-          maxWidth: { xs: '100%', sm: '95%', md: 1000, lg: 1200 },
-          mx: 'auto',
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: { xs: 0, sm: 3 },
-          minHeight: { xs: '100vh', sm: 'auto', md: '90vh' },
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+    <div className="min-h-screen w-full bg-gray-100 py-2 md:py-8 px-2 md:px-4 flex items-center justify-center overflow-auto">
+      <div className="w-full sm:w-[95%] md:max-w-5xl lg:max-w-6xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow-xl rounded-none sm:rounded-xl min-h-screen sm:min-h-0 md:min-h-[90vh] flex flex-col">
         {/* Admin Dashboard Button */}
         {role === 'admin' && (
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<DashboardIcon />}
-            fullWidth
-            sx={{
-              mb: { xs: 2, md: 3 },
-              py: { xs: 1.5, md: 2 },
-              fontWeight: 'bold',
-              fontSize: { xs: '1rem', md: '1.1rem' },
-              letterSpacing: 1,
-              bgcolor: 'secondary.main',
-              '&:hover': { bgcolor: 'secondary.dark' },
-            }}
+          <button
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 md:py-4 px-4 rounded-lg flex items-center justify-center mb-4 md:mb-6 text-base md:text-lg tracking-wide transition-colors duration-300"
             onClick={() => navigate('/admin')}
           >
-            Admin Dashboard
-          </Button>
+            <FaTachometerAlt className="mr-2" /> Admin Dashboard
+          </button>
         )}
 
         {/* User Info */}
-        <Box 
-          display="flex" 
-          alignItems="center" 
-          mb={{ xs: 3, md: 4 }}
-          flexDirection={{ xs: 'column', sm: 'row' }}
-          textAlign={{ xs: 'center', sm: 'left' }}
-        >
-          <Avatar
-            src={imgUrl || undefined}
-            alt={name || 'User'}
-            sx={{ 
-              width: { xs: 80, md: 64 }, 
-              height: { xs: 80, md: 64 }, 
-              mr: { xs: 0, sm: 2 }, 
-              mb: { xs: 2, sm: 0 },
-              bgcolor: 'primary.main', 
-              fontSize: { xs: 40, md: 32 } 
-            }}
-          >
-            {!imgUrl && (name ? name[0] : 'U')}
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              Hello,
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-              {name || 'User'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Role: {role || 'user'}
-            </Typography>
-          </Box>
-        </Box>
+        <div className="flex items-center mb-6 md:mb-8 flex-col sm:flex-row text-center sm:text-left">
+          <div className="w-20 h-20 md:w-16 md:h-16 sm:mr-4 mb-4 sm:mb-0 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl md:text-3xl overflow-hidden flex-shrink-0">
+            {imgUrl ? (
+              <img src={imgUrl} alt={name || 'User'} className="w-full h-full object-cover" />
+            ) : (
+              <span>{name ? name[0].toUpperCase() : 'U'}</span>
+            )}
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Hello,</p>
+            <h2 className="font-bold text-xl md:text-2xl text-gray-800">{name || 'User'}</h2>
+            <p className="text-xs text-gray-500 capitalize">Role: {role || 'user'}</p>
+          </div>
+        </div>
 
         {/* Menu Grid */}
-        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ flex: 1 }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 flex-1">
           {menuItems.map((item) => (
-            <Grid 
-              item 
-              xs={6} 
-              sm={4} 
-              md={3} 
-              lg={2.4}
+            <div
               key={item.label}
+              className="bg-white shadow-md rounded-lg p-3 sm:p-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ease-in-out min-h-[100px] sm:min-h-[110px] md:min-h-[120px] hover:shadow-xl hover:bg-gray-50 hover:-translate-y-0.5"
+              onClick={() => navigate(item.path)}
             >
-              <Paper
-                elevation={1}
-                sx={{
-                  p: { xs: 1.5, sm: 2 },
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  minHeight: { xs: 100, sm: 110, md: 120 },
-                  height: 'auto',
-                  borderRadius: 2,
-                  '&:hover': { 
-                    boxShadow: 6, 
-                    bgcolor: '#f0f0f0',
-                    transform: 'translateY(-2px)'
-                  },
-                }}
-                onClick={() => navigate(item.path)}
-              >
-                <Box sx={{ fontSize: { xs: 28, sm: 32 }, mb: 1 }}>
-                  {item.icon}
-                </Box>
-                <Typography 
-                  variant="body2" 
-                  fontWeight={500} 
-                  align="center"
-                  sx={{ 
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    lineHeight: 1.2,
-                    px: 0.5
-                  }}
-                >
-                  {item.label}
-                </Typography>
-              </Paper>
-            </Grid>
+              <div className="text-3xl sm:text-4xl mb-2">
+                {item.icon}
+              </div>
+              <p className="font-medium text-center text-xs sm:text-sm leading-tight px-1 text-gray-700">
+                {item.label}
+              </p>
+            </div>
           ))}
-          
-          {/* Non-admin users এর জন্য Admin Panel */}
+
+          {/* Admin Panel for non-admin users */}
           {role !== 'admin' && (
-            <Grid 
-              item 
-              xs={6} 
-              sm={4} 
-              md={3} 
-              lg={2.4}
+            <div
+              className="bg-yellow-50 shadow-md rounded-lg p-3 sm:p-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ease-in-out min-h-[100px] sm:min-h-[110px] md:min-h-[120px] border-2 border-dashed border-gray-300 text-orange-600 hover:shadow-xl hover:bg-yellow-100 hover:-translate-y-0.5"
+              onClick={() => navigate('/admin')}
             >
-              <Paper
-                elevation={2}
-                sx={{
-                  p: { xs: 1.5, sm: 2 },
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  border: '2px dashed #bdbdbd',
-                  bgcolor: '#fffde7',
-                  color: '#ff9800',
-                  minHeight: { xs: 100, sm: 110, md: 120 },
-                  borderRadius: 2,
-                  transition: 'all 0.3s ease',
-                  '&:hover': { 
-                    boxShadow: 6, 
-                    bgcolor: '#fff8e1',
-                    transform: 'translateY(-2px)'
-                  },
-                }}
-                onClick={() => navigate('/admin')}
-              >
-                <DashboardIcon 
-                  color="warning" 
-                  sx={{ fontSize: { xs: 28, sm: 32 }, mb: 1 }} 
-                />
-                <Typography 
-                  variant="body2" 
-                  fontWeight={700} 
-                  align="center"
-                  sx={{ 
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    lineHeight: 1.2,
-                    px: 0.5
-                  }}
-                >
-                  Admin Panel
-                </Typography>
-              </Paper>
-            </Grid>
+              <FaTachometerAlt className="text-orange-500 text-3xl sm:text-4xl mb-2" />
+              <p className="font-bold text-center text-xs sm:text-sm leading-tight px-1">
+                Admin Panel
+              </p>
+            </div>
           )}
-        </Grid>
-      </Paper>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

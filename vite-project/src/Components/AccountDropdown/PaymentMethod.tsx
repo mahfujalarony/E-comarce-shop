@@ -14,11 +14,11 @@ interface Address {
   district: string;
   thana: string;
   phone: string;
-  street?: string;
-  city?: string;
-  landmark?: string;
-  house?: string;
-  country?: string;
+  street: string;
+  city: string;
+  landmark: string;
+  house: string;
+  country: string;
 }
 
 const CardPayment = () => {

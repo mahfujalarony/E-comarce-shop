@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccountCircle } from "react-icons/md";
 import { useAuth } from '../auth/AuthContext';
-import { useSocket } from '../socket/SocketContext'; // SocketContext থেকে useSocket আমদানি
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import ChatIcon from '@mui/icons-material/Chat';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Autocomplete from '@mui/material/Autocomplete';
 import { styled } from '@mui/material/styles';
+import socket  from '../../socket';
 
 const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
@@ -40,14 +40,13 @@ const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
   },
 }));
 
-const Navbar: React.FC<{ onlineUsersCount: number }> = ({ onlineUsersCount }) => {
+const Navbar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string>('Home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [avatarOpen, setAvatarOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const { authData } = useAuth();
-  const { totalUnreadCount, hasUnreadMessages } = useSocket(); // useSocket থেকে ডেটা নেওয়া
 
   const top100Films = [
     { title: 'The Shawshank Redemption', year: 1994 },
@@ -69,6 +68,8 @@ const Navbar: React.FC<{ onlineUsersCount: number }> = ({ onlineUsersCount }) =>
   useEffect(() => {
     document.body.style.overflow = sidebarOpen ? 'hidden' : 'auto';
   }, [sidebarOpen]);
+
+  
 
   const toggleSidebar = useCallback(() => {
     if (isMobile) setSidebarOpen((prev) => !prev);
@@ -166,27 +167,21 @@ const Navbar: React.FC<{ onlineUsersCount: number }> = ({ onlineUsersCount }) =>
             />
           </Stack>
 
-          {/* Message Icon with Badge */}
-          <button type="button" onClick={() => navigate('/message')} className="relative">
+          {/* Message Icon */}
+          <button type="button" onClick={() => {
+            socket.emit('load_first_chat');
+            socket.on('first_chat_loaded', (chatId: string) => {
+              console.log('First chat loaded:', chatId);
+              navigate(`/messages/${chatId}`);
+            });
+          }} className="relative">
             <ChatIcon fontSize={isMobile ? 'medium' : 'large'} />
-            {hasUnreadMessages && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-1">
-                {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-              </span>
-            )}
           </button>
 
           {/* Cart Icon */}
           <button type="button" onClick={() => navigate('/wishlist')} className="">
             <ShoppingCartCheckoutIcon fontSize={isMobile ? 'medium' : 'large'} />
           </button>
-
-          {/* Online Users Count */}
-          {onlineUsersCount > 0 && (
-            <span className="absolute top-2 right-20 bg-green-500 text-white text-xs font-semibold rounded-full px-2 py-1">
-              {onlineUsersCount}
-            </span>
-          )}
 
           {/* Avatar Dropdown */}
           <div className="relative" id="avatar-menu">

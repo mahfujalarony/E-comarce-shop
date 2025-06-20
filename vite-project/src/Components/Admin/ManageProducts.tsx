@@ -1,59 +1,102 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../ui/LoadingSpinner'; 
+// MUI Imports
+import {
+  Box,
+  SwipeableDrawer,
+  Button,
+  List,
+  Divider,
+  ListItem,
+  Typography,
+  IconButton,
+  Paper,
+  Container,
+  Card,
+  CardContent,
+  CardMedia,
+  CardActions,
+  Chip,
+  Avatar,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Stack,
+  Pagination,
+  useTheme,
+  useMediaQuery,
+  Badge,
+  Alert,
+  Snackbar
+} from '@mui/material';
 
-// MUI Imports for Drawer and List
-import Box from '@mui/material/Box';
-import SwipeableDrawer from '@mui/material/SwipeableDrawer';
-import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
-import Paper from '@mui/material/Paper';
+import {
+  Close as CloseIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Star as StarIcon,
+  ShoppingCart as ShoppingCartIcon,
+  RateReview as ReviewIcon
+} from '@mui/icons-material';
 import ConfirmationDialog from '../ui/Confirm';
 import FormDialog from '../ui/ProductEditDilogBox';
 import type { Products as Product, Reviews as Review } from '../types';
-// interface UserInfo {
-//   _id: string;
-//   name: string;
-//   email: string;
-//   imgUrl?: string;
-// }
 
-// interface Review {
-//   _id: string;
-//   userId: UserInfo; 
-//   productId: string;
-//   rating: number;
-//   review: string;
-//   likes: number;
-//   createdAt: string;
-// }
+// API Response interfaces
+interface ProductsApiResponse {
+  products: Product[];
+  totalProducts: number;
+  totalPages: number;
+}
 
-// interface Product {
-//   _id: string;
-//   name: string;
-//   price: number;
-//   oldPrice: number;
-//   description: string;
-//   images: string[];
-//   discount: number;
-//   category: string;
-//   inStock: boolean;
-//   createdAt: string;
-//   reviews: Review[];
-// }
+// API functions
+const fetchProducts = async (page: number, limit: number): Promise<ProductsApiResponse> => {
+  const response = await axios.get(`http://localhost:3001/api/fetchProducts`, {
+    params: { page, limit },
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  return response.data.data;
+};
+
+const updateProduct = async (productData: { id: string; data: Partial<Product> }) => {
+  const response = await axios.patch(
+    `http://localhost:3001/api/updateProduct/${productData.id}`,
+    productData.data,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    }
+  );
+  return response.data;
+};
+
+const deleteProduct = async (productId: string) => {
+  const response = await axios.delete(
+    `http://localhost:3001/api/deleteProduct/${productId}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    }
+  );
+  return response.data;
+};
 
 const ManageProducts: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const queryClient = useQueryClient();
+  
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalProducts, setTotalProducts] = useState(0);
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -64,11 +107,9 @@ const ManageProducts: React.FC = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [productIdToDelete, setProductIdToDelete] = useState<string | null>(null);
 
-
   // For Edit Product
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{
     show: boolean;
     message: string;
@@ -78,56 +119,70 @@ const ManageProducts: React.FC = () => {
     message: '',
     type: 'success'
   });
-  
 
-  // Edit product Notification
+  // React Query for fetching products
+  const {
+    data: productsData,
+    isLoading,
+    error,
+    isError,
+    refetch
+  } = // ...existing code...
+useQuery<ProductsApiResponse, Error>({
+  queryKey: ['products', page, rowsPerPage],
+  queryFn: () => fetchProducts(page, rowsPerPage),
+  staleTime: 5 * 60 * 1000,
+  gcTime: 10 * 60 * 1000,
+});
+
+
+  // Update Product Mutation
+  const updateProductMutation = useMutation({
+    mutationFn: updateProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      showNotification("Product updated successfully!", 'success');
+      setEditDialogOpen(false);
+      setSelectedProduct(null);
+    },
+    onError: (error: any) => {
+      console.error("Error updating product:", error);
+      showNotification(
+        error?.response?.data?.message || "Failed to update product",
+        'error'
+      );
+    }
+  });
+
+  // Delete Product Mutation
+  const deleteProductMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      showNotification("Product deleted successfully!", 'success');
+      setConfirmDialogOpen(false);
+      setProductIdToDelete(null);
+    },
+    onError: (error: any) => {
+      console.error("Error deleting product:", error);
+      showNotification(
+        error?.response?.data?.message || "Failed to delete product",
+        'error'
+      );
+    }
+  });
+
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ show: true, message, type });
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, show: false }));
-    }, 3000);
   };
 
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get(`http://localhost:3001/api/fetchProducts`, {
-        params: {
-          page: page + 1,
-          limit: rowsPerPage,
-        },
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (response.data && response.data.data && response.data.data.products) {
-        setProducts(response.data.data.products);
-        setTotalProducts(response.data.data.totalPages * rowsPerPage);
-      } else {
-        setProducts([]);
-        console.warn("Products data not found in API response:", response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setError("Failed to load products.");
-    } finally {
-      setLoading(false);
-    }
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, [page, rowsPerPage]);
-
-  const handleNextPage = () => {
-    setPage(prevPage => prevPage + 1);
-  };
-
-  const handlePreviousPage = () => {
-    setPage(prevPage => Math.max(0, prevPage - 1));
+  const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setRowsPerPage(Number(event.target.value));
+    setPage(1); // Reset to first page
   };
 
   const toggleDrawer = (open: boolean, reviews: Review[] = [], productName: string = '') => {
@@ -138,102 +193,24 @@ const ManageProducts: React.FC = () => {
     }
   };
 
-  const drawerContent = () => (
-    <Box
-      sx={{ width: 'auto', minWidth: 300, p: 2 }}
-      role="presentation"
-    >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">Reviews for {selectedProductName}</Typography>
-        <IconButton onClick={() => toggleDrawer(false)}>
-          <CloseIcon />
-        </IconButton>
-      </Box>
-      <Divider />
-      {selectedProductReviews.length > 0 ? (
-        <List>
-          {selectedProductReviews.map((reviewItem) => (
-            <Paper key={reviewItem._id} elevation={1} sx={{ mb: 2, p: 2 }}>
-              <ListItem alignItems="flex-start" sx={{ flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  {reviewItem.userId.imgUrl && (
-                    <img
-                      src={reviewItem.userId.imgUrl}
-                      alt={reviewItem.userId.name}
-                      style={{ width: 32, height: 32, borderRadius: '50%', marginRight: '10px' }}
-                    />
-                  )}
-                  <ListItemText
-                    primary={
-                      <Typography variant="subtitle2">
-                        {reviewItem.userId.name} ({reviewItem.userId.email})
-                      </Typography>
-                    }
-                    secondary={`Rating: ${reviewItem.rating}/5`}
-                  />
-                </Box>
-                <Typography
-                  sx={{ display: 'block', mt: 1, whiteSpace: 'pre-wrap' }}
-                  component="span"
-                  variant="body2"
-                  color="text.primary"
-                >
-                  {reviewItem.review}
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  Likes: {reviewItem.likes} | Date: {new Date(reviewItem.createdAt).toLocaleDateString()}
-                </Typography>
-              </ListItem>
-            </Paper>
-          ))}
-        </List>
-      ) : (
-        <Typography sx={{ p: 2, textAlign: 'center' }}>No reviews for this product yet.</Typography>
-      )}
-    </Box>
-  );
-
-
-
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
     setEditDialogOpen(true);
   };
 
-const handleSaveProduct = async (editedProduct: Product) => {
-  setIsSubmitting(true);
-  try {
-    const response = await axios.patch(
-      `http://localhost:3001/api/updateProduct/${editedProduct._id}`,
-      {
+  const handleSaveProduct = async (editedProduct: Product) => {
+    updateProductMutation.mutate({
+      id: editedProduct._id,
+      data: {
         name: editedProduct.name,
         price: editedProduct.price,
         oldPrice: editedProduct.oldPrice,
         description: editedProduct.description,
         category: editedProduct.category,
-        // discount: editedProduct.discount, // যদি backend থেকে হিসাব হয়, এটা বাদ দিন
         inStock: editedProduct.inStock,
-        images: editedProduct.images // <-- এই লাইনটি যোগ করুন
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        images: editedProduct.images
       }
-    );
-    // ...rest of code...
-  } catch (error) {
-    console.error("Error updating product:", error);
-    showNotification(
-      error instanceof Error ? error.message : "Failed to update product",
-      'error'
-    );
-  } finally {
-    setIsSubmitting(false);
-    setEditDialogOpen(false);
-    setSelectedProduct(null);
-  }
+    });
   };
 
   const handleDeleteProductClick = (productId: string) => {
@@ -243,24 +220,7 @@ const handleSaveProduct = async (editedProduct: Product) => {
 
   const handleConfirmDelete = async () => {
     if (productIdToDelete) {
-      try {
-        await axios.delete(`http://localhost:3001/api/deleteProduct/${productIdToDelete}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        // Product list theke remove korun
-        setProducts(products.filter(product => product._id !== productIdToDelete));
-        console.log("Product deleted successfully:", productIdToDelete);
-      } catch (err) {
-        console.error("Error deleting product:", err);
-        setError("Failed to delete product.");
-      } finally {
-        setConfirmDialogOpen(false);
-        setProductIdToDelete(null);
-      }
+      deleteProductMutation.mutate(productIdToDelete);
     }
   };
 
@@ -269,107 +229,417 @@ const handleSaveProduct = async (editedProduct: Product) => {
     setProductIdToDelete(null);
   };
 
-  if (loading) {
-    return <div>Loading products...</div>;
+  const drawerContent = () => (
+    <Box
+      sx={{ 
+            width: {
+      xs: '100vw',  // mobile
+      sm: '100vw',  // small screens
+      md: '100vw',  // medium screens
+      lg: '100vw',  // large screens
+      xl: '100vw',  // extra large screens
+    },
+        maxHeight: '80vh',
+        p: 2,
+        overflow: 'auto'
+      }}
+      role="presentation"
+    >
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 2,
+        position: 'sticky',
+        top: 0,
+        backgroundColor: 'background.paper',
+        zIndex: 1
+      }}>
+        <Typography variant="h6" noWrap>
+          Reviews: {selectedProductName}
+        </Typography>
+        <IconButton onClick={() => toggleDrawer(false)}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      <Divider />
+      {selectedProductReviews.length > 0 ? (
+        <List sx={{ pt: 2 }}>
+          {selectedProductReviews.map((reviewItem) => (
+            <Paper key={reviewItem._id} elevation={2} sx={{ mb: 2, p: 2 }}>
+              <ListItem alignItems="flex-start" sx={{ flexDirection: 'column', p: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100%' }}>
+                  <Avatar
+                    src={reviewItem.userId.imgUrl}
+                    alt={reviewItem.userId.name}
+                    sx={{ width: 40, height: 40, mr: 2 }}
+                  >
+                    {reviewItem.userId.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {reviewItem.userId.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {reviewItem.userId.email}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <StarIcon color="warning" fontSize="small" />
+                    <Typography variant="body2" ml={0.5}>
+                      {reviewItem.rating}/5
+                    </Typography>
+                  </Box>
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.primary"
+                  sx={{ mb: 2, lineHeight: 1.6 }}
+                >
+                  {reviewItem.review}
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <Chip 
+                    label={`${reviewItem.likes} likes`} 
+                    size="small" 
+                    variant="outlined"
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(reviewItem.createdAt).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              </ListItem>
+            </Paper>
+          ))}
+        </List>
+      ) : (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          py: 4 
+        }}>
+          <ReviewIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="body1" color="text.secondary">
+            No reviews for this product yet
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+
+  
+
+  // Loading state
+  if (isLoading && !productsData) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <LoadingSpinner message="Loading products..." className="mt-20" />
+      </Container>
+    );
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
+  // Error state
+  if (isError) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error instanceof Error ? error.message : "Failed to load products"}
+        </Alert>
+        <Button variant="contained" onClick={() => refetch()}>
+          Try Again
+        </Button>
+      </Container>
+    );
   }
 
-  if (products.length === 0 && !loading) {
-    return <div>No products found.</div>;
+  const products = productsData?.products || [];
+  const totalPages = productsData?.totalPages || 0;
+
+  // Empty state
+  if (products.length === 0 && !isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <ShoppingCartIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h5" gutterBottom>
+            No products found
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Start by adding some products to your inventory
+          </Typography>
+        </Paper>
+      </Container>
+    );
   }
 
   return (
-    <div>
-      <h1>Manage Products</h1>
-      
-      <ul>
-        {products.map(product => (
-          <li key={product._id}>
-            <h2>{product.name}</h2>
-            <p>Price: ${product.price}</p>
-            <p>Old Price: ${product.oldPrice}</p>
-            <p>Discount: {product.discount}%</p>
-            <p>Category: {product.category}</p>
-            <p>Description: {product.description.substring(0, 100)}...</p>
-            {product.images && product.images.length > 0 && (
-              <img src={product.images[0]} alt={product.name} width="100" />
-            )}
-            <p>In Stock: {product.inStock ? 'Yes' : 'No'}</p>
-            <p>
-              Reviews: {' '}
-              <button 
-                onClick={() => toggleDrawer(true, product.reviews, product.name)}
-                style={{ background: 'none', border: 'none', color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                {product.reviews.length}
-              </button>
-            </p>
-      <Button 
-        variant="contained"
-        color="primary"
-        onClick={() => handleEditProduct(product)}
-        sx={{ mr: 1 }}
+    <Container maxWidth="lg" sx={{ py: 2 }}>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          component="h1" 
+          gutterBottom
+          fontWeight="bold"
+        >
+          Manage Products
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Total: {productsData?.totalProducts || products.length} products
+        </Typography>
+      </Box>
+
+      {/* Controls */}
+      <Stack 
+        direction={{ xs: 'column', sm: 'row' }} 
+        spacing={2} 
+        sx={{ mb: 3 }}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
       >
-        Edit
-      </Button>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Products per page</InputLabel>
+          <Select
+            value={rowsPerPage}
+            label="Products per page"
+            onChange={handleRowsPerPageChange as any}
+          >
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={20}>20</MenuItem>
+            <MenuItem value={50}>50</MenuItem>
+          </Select>
+        </FormControl>
+        
+        <Box sx={{ flex: 1 }} />
+        
+        <Button 
+          variant="outlined" 
+          onClick={() => refetch()}
+          disabled={isLoading}
+        >
+          Refresh
+        </Button>
+      </Stack>
 
-            {/* Delete Product */}
-            <Button 
-              variant="contained"
-              color="error"
-              onClick={() => handleDeleteProductClick(product._id)}
+      {/* Products Grid */}
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  {products.map((product: Product) => (
+    <div key={product._id} className="h-full flex flex-col">
+            <Card 
+              sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 4
+                }
+              }}
             >
-              Delete
-            </Button>
-            <hr />
-          </li>
-        ))}
-      </ul>
+              {/* Product Image */}
+              {product.images && product.images.length > 0 && (
+                <CardMedia
+                  component="img"
+                  sx={{ 
+                    height: 200, 
+                    objectFit: 'cover',
+                    bgcolor: 'grey.100'
+                  }}
+                  image={product.images[0]}
+                  alt={product.name}
+                />
+              )}
+              
+              <CardContent sx={{ flex: 1, pb: 1 }}>
+                {/* Product Name */}
+                <Typography 
+                  variant="h6" 
+                  component="h2" 
+                  gutterBottom
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: 1.2,
+                    minHeight: '2.4em'
+                  }}
+                >
+                  {product.name}
+                </Typography>
 
-      {/* Pagination */}
-      <div>
-        <button onClick={handlePreviousPage} disabled={page === 0}>
-          Previous
-        </button>
-        <span> Page {page + 1} </span>
-        <button onClick={handleNextPage} disabled={products.length < rowsPerPage || (page + 1) * rowsPerPage >= totalProducts}>
-          Next
-        </button>
-      </div>
+                {/* Price Section */}
+                <Box sx={{ mb: 2 }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="h6" color="primary" fontWeight="bold">
+                      ${product.price}
+                    </Typography>
+                    {product.oldPrice > product.price && (
+                      <>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ textDecoration: 'line-through' }}
+                        >
+                          ${product.oldPrice}
+                        </Typography>
+                        <Chip 
+                          label={`-${product.discount}%`}
+                          color="error"
+                          size="small"
+                        />
+                      </>
+                    )}
+                  </Stack>
+                </Box>
 
-      {/* Rows per page selector */}
-      <div>
-        <label htmlFor="rowsPerPage">Products per page: </label>
-        <select 
-          id="rowsPerPage" 
-          value={rowsPerPage} 
-          onChange={(e) => {
-            setRowsPerPage(Number(e.target.value));
-            setPage(0); 
+                {/* Category & Stock */}
+                <Box sx={{ mb: 2 }}>
+                  <Chip 
+                    label={product.category}
+                    variant="outlined"
+                    size="small"
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                  <Chip 
+                    label={product.inStock ? 'In Stock' : 'Out of Stock'}
+                    color={product.inStock ? 'success' : 'error'}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
+
+                {/* Description */}
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    mb: 2
+                  }}
+                >
+                  {product.description}
+                </Typography>
+
+                {/* Reviews */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Badge badgeContent={product.reviews.length} color="primary">
+                    <IconButton 
+                      size="small"
+                      onClick={() => toggleDrawer(true, product.reviews, product.name)}
+                      sx={{ p: 0.5 }}
+                    >
+                      <ReviewIcon fontSize="small" />
+                    </IconButton>
+                  </Badge>
+                  <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    {product.reviews.length} review{product.reviews.length !== 1 ? 's' : ''}
+                  </Typography>
+                </Box>
+              </CardContent>
+
+              {/* Actions */}
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    onClick={() => handleEditProduct(product)}
+                    size="small"
+                    sx={{ flex: 1 }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => handleDeleteProductClick(product._id)}
+                    size="small"
+                    sx={{ flex: 1 }}
+                  >
+                    Delete
+                  </Button>
+                </Stack>
+              </CardActions>
+            </Card>
+    </div>
+  ))}
+</div>
+
+      {/* Loading overlay for mutations */}
+      {(updateProductMutation.isPending || deleteProductMutation.isPending) && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
           }}
         >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-        </select>
-      </div>
+          <Paper sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <LoadingSpinner />
+            <Typography>
+              {updateProductMutation.isPending ? 'Updating product...' : 'Deleting product...'}
+            </Typography>
+          </Paper>
+        </Box>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            size={isMobile ? "small" : "medium"}
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
 
       {/* Swipeable Drawer for Reviews */}
-      <SwipeableDrawer
-        anchor="bottom"
-        open={drawerOpen}
-        onClose={() => toggleDrawer(false)}
-        onOpen={() => toggleDrawer(true, selectedProductReviews, selectedProductName)}
-        disableSwipeToOpen={false}
-        ModalProps={{
-          keepMounted: true,
-        }}
-      >
-        {drawerContent()}
-      </SwipeableDrawer>
+<SwipeableDrawer
+  anchor="bottom"
+  open={drawerOpen}
+  onClose={() => toggleDrawer(false)}
+  onOpen={() => toggleDrawer(true, selectedProductReviews, selectedProductName)}
+  disableSwipeToOpen={false}
+  ModalProps={{
+    keepMounted: true,
+  }}
+  PaperProps={{
+    sx: {
+      width: '100vw',
+      maxWidth: '100vw',
+      left: 0,
+      right: 0,
+      margin: 0,
+      borderTopLeftRadius: { xs: 2, sm: 8 },
+      borderTopRightRadius: { xs: 2, sm: 8 },
+      // নিচের লাইনটি যোগ করুন:
+      borderRadius: 0, // সব স্ক্রিনে পুরোপুরি স্কয়ার রাখতে চাইলে
+    }
+  }}
+>
+  {drawerContent()}
+</SwipeableDrawer>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
@@ -382,23 +652,6 @@ const handleSaveProduct = async (editedProduct: Product) => {
         cancelButtonText="Cancel"
       />
 
-
-      {/* Notification */}
-      {notification.show && (
-        <div style={{
-          position: 'fixed',
-          bottom: 20,
-          right: 20,
-          padding: '10px 20px',
-          backgroundColor: notification.type === 'success' ? '#4caf50' : '#f44336',
-          color: 'white',
-          borderRadius: 4,
-          zIndex: 9999
-        }}>
-          {notification.message}
-        </div>
-      )}
-
       {/* Edit Product Dialog */}
       <FormDialog
         open={editDialogOpen}
@@ -408,9 +661,26 @@ const handleSaveProduct = async (editedProduct: Product) => {
         }}
         onSave={handleSaveProduct}
         product={selectedProduct}
-        isSubmitting={isSubmitting}
+        isSubmitting={updateProductMutation.isPending}
       />
-    </div>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.show}
+        autoHideDuration={4000}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+          severity={notification.type}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 };
 

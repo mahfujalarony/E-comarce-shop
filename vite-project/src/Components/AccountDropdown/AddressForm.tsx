@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface FormData {
-  fullName: string;
+  fullName: string ;
   street: string;
   city: string;
   district: string;
