@@ -10,7 +10,7 @@ router.post('/reqmakeadmin', protect, reqmakeadmin);
 router.get('/fetchUsers', protect, isAdmin, fetchUsers);
 router.get('/fetchProducts', fetchAllProducts);
 router.get('/fetchOrders', protect, isAdmin, fetchOrders);
-router.get('/userProfile/:userId', protect, isAdmin, fetchUserProfile);
+router.get('/userProfile/:userId', protect, fetchUserProfile);
 
 
 // Update for admin

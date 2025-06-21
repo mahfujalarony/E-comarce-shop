@@ -9,15 +9,13 @@ const http = require('http');
 const productRouter = require('./routers/productRouters');
 const cartRouter = require('./routers/cartRouter');
 const reviewRouter = require('./routers/reviewRouter');
-// const userRouter = require('./routers/userRouter');
 const imgRouter = require('./routers/imgRouter');
 const authRouter = require('./routers/authRouter');
 const addressRoutes = require('./routers/addressRoutes');
 const OrderRouter = require('./routers/orderRouter');
 const wishlistRouter = require('./routers/wishListRouter');
-const messageRouter = require('./routers/messageRouter');
 const adminRouter = require('./routers/adminRouter'); 
-//const messageSocket = require('./sockets/MessageSocket');
+
 const messageSocket = require('./sockets/Messages');
 
 const app = express();
@@ -47,7 +45,7 @@ app.use('/api', addressRoutes);
 app.use('/api', OrderRouter);
 app.use('/api', wishlistRouter);
 app.use('/api', adminRouter); 
-app.use('/api/message', messageRouter);
+
 
 // Test Route
 app.get('/', (req, res) => {

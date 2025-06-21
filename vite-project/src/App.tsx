@@ -34,7 +34,7 @@ import Admin from './Components/Admin/Admin.tsx';
 import RequestAdmin from './Components/Admin/RequestAdmin.tsx'; 
 import InsertOne from './Components/Admin/InsertOne.tsx';
 import AdminOnlyRoute from './Components/PrivateRoute/AdminOnlyRoute.tsx';
-import ViewProfile from './Components/Admin/ViewProfile.tsx';
+import ViewProfile from './Components/message/ViewProfile.tsx';
 
 // setting somthing
 import ChangePass from './Components/ui/ChangePass.tsx';
@@ -72,7 +72,10 @@ function AppWrapper() {
         <Route path="/refer" element={<Refer />} />
         <Route path="/support" element={<HelpCenter />} />
         <Route path="/addresses" element={<ViewAddress />} />
+
+
         <Route path="/messages/:chatId" element={<Message />} />
+        <Route path="/messages/viewprofile/:userId" element={<ViewProfile />}/>
 
         <Route path="/reviews" element={<MyReviews />} />
         <Route path="/details/:id" element={<ProductDetails />} />
@@ -99,14 +102,7 @@ function AppWrapper() {
             </AdminOnlyRoute>
           }
         />
-        <Route
-          path="/messages/viewprofile/:userId"
-          element={
-            <AdminOnlyRoute>
-              <ViewProfile />
-            </AdminOnlyRoute>
-          }
-        />
+
       </Routes>
       {!shouldHideFooter && <Footer />}
     </>

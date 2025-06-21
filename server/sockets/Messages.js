@@ -56,36 +56,66 @@ const messageSocket = (io) => {
     });
 
     // ➤ Load first chat for user (for auto navigation)
-    socket.on('load_first_chat', async () => {
-      const userId = socket.user.userId;
-      const role = socket.user.role;
+// server-side (socket.on)
+// server-side (socket.on)
+// server-side (socket.on)
+socket.on('load_first_chat', async () => {
+  const userId = socket.user?.userId;
+  const role = socket.user?.role;
 
-      if (role === 'admin') {
-        //load last message for admin
-        const lastConversation = await Conversation
-          .findOne()
-          .sort({ lastMessageTime: -1 })
-          .lean();
+  // ডিবাগিং: userId এবং role চেক করুন
+  console.log('Load first chat requested:', { userId, role });
 
-        if (lastConversation) {
-          socket.emit('first_chat_loaded', lastConversation.chatId);
-          return;
-        }
-      }
-      try {
-        const conversation = await Conversation
-          .findOne({ createdBy: userId }, 'chatId')
-          .sort({ createdAt: 1 })
-          .lean();
+  if (!userId || !role) {
+    console.error('Missing userId or role');
+    socket.emit('error', 'User not authenticated');
+    return;
+  }
 
-        console.log('First chat loaded:', conversation);
+  try {
+    let conversation;
 
-        socket.emit('first_chat_loaded', conversation ? conversation.chatId : null);
-      } catch (error) {
-        console.error('Error loading first chat:', error);
-        socket.emit('error', 'Could not load first chat');
-      }
-    });
+    if (role === 'admin') {
+      conversation = await Conversation.findOne()
+        .sort({ lastMessageTime: -1 })
+        .populate('createdBy', 'name email imgUrl role')
+        .lean();
+    } else {
+      conversation = await Conversation.findOne({ createdBy: userId })
+        .sort({ lastMessageTime: -1 })
+        .populate('createdBy', 'name email imgUrl role')
+        .lean();
+    }
+
+    // ডিবাগিং: কনভার্সেশন ফলাফল চেক করুন
+    console.log('Found conversation:', conversation);
+
+    if (conversation) {
+      // createdBy ফিল্ড থেকে ডেটা নিন, userId নয়
+      const payload = {
+        id: conversation.chatId || conversation._id.toString(), // chatId না থাকলে _id ব্যবহার করুন
+        name: conversation.name || 'Unnamed Chat', // ডিফল্ট নাম
+        user: {
+          name: conversation.createdBy?.name || 'Unknown User',
+          email: conversation.createdBy?.email || '',
+          imgUrl: conversation.createdBy?.imgUrl || '',
+          role: conversation.createdBy?.role || 'user',
+          userId: conversation.createdBy?._id.toString() || userId,
+        },
+      };
+
+      console.log('Emitting first_chat_loaded with payload:', payload);
+      socket.emit('first_chat_loaded', payload);
+    } else {
+      console.log('No conversation found, emitting null');
+      socket.emit('first_chat_loaded', null);
+    }
+  } catch (error) {
+    console.error('Error loading first chat:', error);
+    socket.emit('error', 'Could not load first chat');
+  }
+});
+
 
     // ➤ Load all conversations
     socket.on('load_conversations', async () => {
@@ -102,23 +132,25 @@ const messageSocket = (io) => {
           .sort({ lastMessageTime: -1 })
           ;
 
-        const formattedConversations = conversations.map((convo) => ({
-          chatId: convo.chatId,
-          product: {
-            _id: convo.productId._id,
-            name: convo.productId.name,
-            price: convo.productId.price,
-            imageUrl: convo.productId.images?.[0] || null,
-          },
-          user: {
-            userId: convo.createdBy._id,
-            name: convo.createdBy.name,
-            email: convo.createdBy.email,
-            imgUrl: convo.createdBy.imgUrl,
-            role: convo.createdBy.role,
-          },
-          createdAt: convo.createdAt,
-        }));
+const formattedConversations = conversations
+  .filter(convo => convo.productId && convo.createdBy)
+  .map((convo) => ({
+    chatId: convo.chatId,
+    product: {
+      _id: convo.productId._id,
+      name: convo.productId.name,
+      price: convo.productId.price,
+      imageUrl: convo.productId.images?.[0] || null,
+    },
+    user: {
+      userId: convo.createdBy._id,
+      name: convo.createdBy.name,
+      email: convo.createdBy.email,
+      imgUrl: convo.createdBy.imgUrl,
+      role: convo.createdBy.role,
+    },
+    createdAt: convo.createdAt,
+  }));
 
         socket.emit('conversations_loaded', formattedConversations);
       } catch (error) {

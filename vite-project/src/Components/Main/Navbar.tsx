@@ -8,7 +8,19 @@ import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Autocomplete from '@mui/material/Autocomplete';
 import { styled } from '@mui/material/styles';
-import socket  from '../../socket';
+import socket from '../../socket';
+
+interface ConversationType {
+  id: string;
+  name: string;
+  user: {
+    name: string;
+    email: string;
+    imgUrl: string;
+    role: 'admin' | 'user';
+    userId: string;
+  };
+}
 
 const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
@@ -42,8 +54,10 @@ const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
 
 const Navbar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string>('Home');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [conversation, setSelectedConversation] = useState<ConversationType | null>(null);
+  console.log('conversation', conversation);
   const [avatarOpen, setAvatarOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const { authData } = useAuth();
@@ -51,7 +65,9 @@ const Navbar: React.FC = () => {
   const top100Films = [
     { title: 'The Shawshank Redemption', year: 1994 },
     { title: 'software', year: 1994 },
-    // ... বাকি ফিল্ম লিস্ট (অপরিবর্তিত)
+    { title: 'The Godfather', year: 1972 },
+    { title: 'Pulp Fiction', year: 1994 },
+    { title: 'Inception', year: 2010 },
   ];
 
   const handleResize = useCallback(() => {
@@ -69,8 +85,6 @@ const Navbar: React.FC = () => {
     document.body.style.overflow = sidebarOpen ? 'hidden' : 'auto';
   }, [sidebarOpen]);
 
-  
-
   const toggleSidebar = useCallback(() => {
     if (isMobile) setSidebarOpen((prev) => !prev);
   }, [isMobile]);
@@ -82,7 +96,7 @@ const Navbar: React.FC = () => {
     navigate(path);
   }, [isMobile, navigate]);
 
-  const toggleAvatar = useCallback((e: React.MouseEvent) => {
+  const toggleAvatar = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setAvatarOpen((prev) => !prev);
   }, []);
@@ -95,7 +109,7 @@ const Navbar: React.FC = () => {
     }
   }, []);
 
-  const handleDropdownItemClick = useCallback((path: string, e: React.MouseEvent) => {
+  const handleDropdownItemClick = useCallback((path: string, e: React.MouseEvent<HTMLLIElement>) => {
     e.stopPropagation();
     setAvatarOpen(false);
     navigate(path);
@@ -105,6 +119,26 @@ const Navbar: React.FC = () => {
     document.addEventListener("click", handleOutsideClick);
     return () => document.removeEventListener("click", handleOutsideClick);
   }, [handleOutsideClick]);
+
+  const handleFirstChatLoaded = useCallback((conversation: ConversationType | null) => {
+    if (conversation) {
+      setSelectedConversation(conversation);
+      navigate(`/messages/${conversation.id}`, {
+        state: { user: conversation.user, name: conversation.name },
+      });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    socket.on('first_chat_loaded', handleFirstChatLoaded);
+    return () => {
+      socket.off('first_chat_loaded', handleFirstChatLoaded);
+    };
+  }, [handleFirstChatLoaded]);
+
+  const handleClick = useCallback(() => {
+    socket.emit('load_first_chat');
+  }, []);
 
   return (
     <div className="font-inter mb-24">
@@ -168,13 +202,7 @@ const Navbar: React.FC = () => {
           </Stack>
 
           {/* Message Icon */}
-          <button type="button" onClick={() => {
-            socket.emit('load_first_chat');
-            socket.on('first_chat_loaded', (chatId: string) => {
-              console.log('First chat loaded:', chatId);
-              navigate(`/messages/${chatId}`);
-            });
-          }} className="relative">
+          <button type="button" onClick={handleClick} className="relative">
             <ChatIcon fontSize={isMobile ? 'medium' : 'large'} />
           </button>
 
@@ -251,7 +279,10 @@ const Navbar: React.FC = () => {
                 >
                   Help / Support Center
                 </li>
-                <li className="px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer transition-colors">
+                <li 
+                  className="px-4 py-2 hover:bg-red-100 text-red-600 cursor-pointer transition-colors"
+                  onClick={(e) => handleDropdownItemClick("/logout", e)}
+                >
                   Logout
                 </li>
               </ul>

@@ -18,6 +18,7 @@ interface ConversationType {
 
 const Message: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
+  console.log('selectedConversation', selectedConversation);
   const { chatId } = useParams<{ chatId: string }>();
   const location = useLocation();
 

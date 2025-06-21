@@ -183,7 +183,7 @@ const ChatBox: React.FC<Props> = ({ conversation }) => {
           
           <div
             className="flex items-center gap-3 flex-1 cursor-pointer"
-            onClick={() => role === 'admin' && navigate(`/messages/viewprofile/${conversation.user.userId}`)}
+            onClick={() => navigate(`/messages/viewprofile/${conversation.user.userId}`)}
           >
             <div className="relative">
               <img
