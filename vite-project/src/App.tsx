@@ -17,7 +17,7 @@ import ManageAccount from './Components/AccountDropdown/ManageAccount.tsx';
 import MyOrders from './Components/AccountDropdown/MyOrders.tsx';
 import MyReviews from './Components/AccountDropdown/MyReviws.tsx';
 import OrderReturn from './Components/AccountDropdown/OrderReturn.tsx';
-import Payment from '../../backup-code/Pyment.tsx';
+//import Payment from '../../backup-code/Pyment.tsx';
 import Refer from './Components/AccountDropdown/Refer.tsx';
 import WishList from './Components/AccountDropdown/WishList.tsx';
 import HelpCenter from './Components/AccountDropdown/HelpCenter.tsx';
@@ -77,7 +77,7 @@ function AppWrapper() {
         <Route path="/account/change-password" element={<ChangePass />}/>
         <Route path="/orders" element={<MyOrders />} />
         <Route path="/wishlist" element={<WishList />} />
-        <Route path="/payment-methods/:id" element={<Payment />} />
+        
         <Route path="/returns" element={<OrderReturn />} />
         <Route path="/refer" element={<Refer />} />
         <Route path="/support" element={<HelpCenter />} />
