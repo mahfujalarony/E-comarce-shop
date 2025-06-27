@@ -52,7 +52,7 @@ const Step3: React.FC = () => {
     setSuccessMessage("");
 
     try {
-      await axios.post("http://localhost:3001/api/send-otp", {
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/send-otp`, {
         email: newEmail,
       });
 
@@ -85,7 +85,7 @@ const Step3: React.FC = () => {
     setSuccessMessage("");
 
     try {
-      const response = await axios.post("http://localhost:3001/api/verify-otp-and-register", {
+      const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/verify-otp-and-register`, {
         email: newEmail,
         token,
         name: authData.name ?? "", // null ফলব্যাক

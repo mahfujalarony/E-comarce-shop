@@ -1,9 +1,10 @@
 import React from 'react'
+import NotFound from '../error/NotFound'
 
 const Refer: React.FC = () => {
   return (
     <div>
-      Refer
+      <NotFound />
     </div>
   )
 }

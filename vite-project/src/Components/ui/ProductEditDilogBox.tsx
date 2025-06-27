@@ -88,7 +88,7 @@ const handleSave = async () => {
       });
 
       const imageUploadResponse = await axios.post(
-        'http://localhost:3001/api/image',
+        `${import.meta.env.VITE_APP_API_URL}/api/image`,
         formDataToSend,
         {
           headers: {

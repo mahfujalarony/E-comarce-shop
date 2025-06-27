@@ -30,7 +30,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:3001/api/login", {
+      const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/login`, {
         email,
         password,
       });
@@ -68,7 +68,7 @@ const Login: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const res = await axios.post("http://localhost:3001/api/google", {
+      const res = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/google`, {
         name: user.displayName,
         email: user.email,
         imgUrl: user.photoURL,

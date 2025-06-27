@@ -46,7 +46,7 @@ const ManageOrder: React.FC = () => {
   const [activeStatus, setActiveStatus] = useState<OrderStatus>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
-  const ordersPerPage = 10;
+ // const ordersPerPage = 10;
 
   // Status color mapping
   const statusColors = {
@@ -70,7 +70,7 @@ const ManageOrder: React.FC = () => {
         return;
       }
 
-      const response = await axios.get(`http://localhost:3001/api/fetchOrders?page=${page}`, {
+      const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/fetchOrders?page=${page}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -99,7 +99,7 @@ const ManageOrder: React.FC = () => {
       const token = localStorage.getItem('token');
       
       await axios.patch(
-        `http://localhost:3001/api/updateOrderStatus/${orderId}/status`,
+        `${import.meta.env.VITE_APP_API_URL}/api/updateOrderStatus/${orderId}/status`,
         { status: newStatus },
         {
           headers: {

@@ -14,6 +14,13 @@ interface AuthData {
 interface AuthContextType {
   authData: AuthData;
   setAuthData: React.Dispatch<React.SetStateAction<AuthData>>;
+  logout: () => void;
+}
+
+
+interface AuthContextType {
+  authData: AuthData;
+  setAuthData: React.Dispatch<React.SetStateAction<AuthData>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +38,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
  // console.log("AuthProvider initialized with authData:", authData);
 
+   const logout = () => {
+    // Clear localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    // Reset auth state
+    setAuthData({
+      name: null,
+      email: null,
+      userId: null,
+      password: null,
+      imgUrl: null,
+      isAuthenticated: false,
+      token: null,
+      role: null,
+    });
+  };
+
   useEffect(() => {
     const validateToken = async () => {
       const token = localStorage.getItem("token");
@@ -44,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const response = await fetch("http://localhost:3001/api/check-token-valid-and-reset-local-storage", {
+        const response = await fetch(`${import.meta.env.VITE_APP_API_URL}/api/check-token-valid-and-reset-local-storage`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ authData, setAuthData }}>
+    <AuthContext.Provider value={{ authData, setAuthData, logout }}>
       {children}
     </AuthContext.Provider>
   );

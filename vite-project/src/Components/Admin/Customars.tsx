@@ -19,7 +19,7 @@ const Customers: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/fetchUsers', {
+      const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/fetchUsers`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }

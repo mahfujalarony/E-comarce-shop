@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import socket from '../../socket';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, User, Package } from 'lucide-react';
+import {  MessageCircle, User, Package, Eye } from 'lucide-react';
 
 type Conversation = {
   chatId: string;
@@ -31,6 +31,7 @@ const ChatList: React.FC = () => {
   const navigate = useNavigate();
   const { chatId } = useParams<{ chatId: string }>();
   const queryClient = useQueryClient();
+  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
 
   // Fetch conversations using React Query
   const fetchConversations = (): Promise<Conversation[]> => {
@@ -99,8 +100,13 @@ const ChatList: React.FC = () => {
     }
   };
 
-  const handleBackClick = () => {
-    navigate('/');
+  // const handleBackClick = () => {
+  //   navigate('/');
+  // };
+
+  const handleProductClick = (e: React.MouseEvent, productId: string) => {
+    e.stopPropagation();
+    navigate(`/details/${productId}`);
   };
 
   if (isLoading) {
@@ -139,9 +145,9 @@ const ChatList: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col w-full h-full bg-white">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+      {/* <div className="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="flex items-center gap-3">
           {chatId && (
             <button
@@ -153,7 +159,7 @@ const ChatList: React.FC = () => {
           )}
           <h2 className="text-lg font-semibold text-gray-800">Messages</h2>
         </div>
-      </div>
+      </div> */}
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
@@ -185,11 +191,16 @@ const ChatList: React.FC = () => {
                 }`}
               >
                 {/* Product Image */}
-                <div className="relative flex-shrink-0">
+                <div 
+                  className="relative flex-shrink-0"
+                  onMouseEnter={() => setHoveredProduct(conv.product._id)}
+                  onMouseLeave={() => setHoveredProduct(null)}
+                >
                   <img
                     src={conv.product.imageUrl}
                     alt="product"
-                    className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                    className="w-12 h-12 rounded-lg object-cover border border-gray-200 cursor-pointer"
+                    onClick={(e) => handleProductClick(e, conv.product._id)}
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder-image.png';
                     }}
@@ -197,9 +208,22 @@ const ChatList: React.FC = () => {
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full border-2 border-white flex items-center justify-center">
                     <Package className="w-3 h-3 text-gray-600" />
                   </div>
+
+                  {/* Tooltip শুধু এইটুকু যোগ করেছি */}
+                  {hoveredProduct === conv.product._id && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-20">
+                      <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          View Product
+                        </div>
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-800"></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Content */}
+             
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-medium text-gray-900 truncate text-sm">

@@ -157,6 +157,19 @@ const ChatBox: React.FC<Props> = ({ conversation }) => {
     }
   };
 
+  const myUserId = useMemo(() => {
+  const userStr = localStorage.getItem('user');
+  if (!userStr) return null;
+  try {
+    return JSON.parse(userStr)._id;
+  } catch {
+    return null;
+  }
+}, []);
+
+const isOwnChat = conversation.user.userId === myUserId;
+
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -181,29 +194,39 @@ const ChatBox: React.FC<Props> = ({ conversation }) => {
             <ArrowLeft className="w-5 h-5" />
           </button> */}
           
-          <div
-            className="flex items-center gap-3 flex-1 cursor-pointer"
-            onClick={() => navigate(`/messages/viewprofile/${conversation.user.userId}`)}
-          >
-            <div className="relative">
-              <img
-                src={conversation.user.imgUrl}
-                alt="User"
-                className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <User 
-                className="w-10 h-10 text-gray-400 border border-gray-200 rounded-full p-2" 
-                style={{display: conversation.user.imgUrl ? 'none' : 'block'}} 
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">{conversation.user.name}</h3>
-              <p className="text-sm text-gray-500 truncate">{conversation.user.email}</p>
-            </div>
-          </div>
+<div
+  className="flex items-center gap-3 flex-1 cursor-pointer"
+  onClick={() => navigate(`/messages/viewprofile/${conversation.user.userId}`)}
+>
+  {!isOwnChat && (
+    <>
+      <div className="relative">
+        <img
+          src={conversation.user.imgUrl}
+          alt="User"
+          className="w-10 h-10 rounded-full object-cover border border-gray-200"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+        <User
+          className="w-10 h-10 text-gray-400 border border-gray-200 rounded-full p-2"
+          style={{ display: conversation.user.imgUrl ? 'none' : 'block' }}
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-gray-900 truncate">{conversation.user.name}</h3>
+        <p className="text-sm text-gray-500 truncate">{conversation.user.email}</p>
+      </div>
+    </>
+  )}
+  {isOwnChat && (
+    <div className="flex-1 min-w-0">
+      <h3 className="font-semibold text-gray-900 truncate">You</h3>
+      <p className="text-sm text-gray-500 truncate">This is your own chat</p>
+    </div>
+  )}
+</div>
         </div>
       </div>
 

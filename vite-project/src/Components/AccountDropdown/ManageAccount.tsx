@@ -44,20 +44,30 @@ const ManageAccount: React.FC = () => {
         )}
 
         {/* User Info */}
-        <div className="flex items-center mb-6 md:mb-8 flex-col sm:flex-row text-center sm:text-left">
-          <div className="w-20 h-20 md:w-16 md:h-16 sm:mr-4 mb-4 sm:mb-0 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl md:text-3xl overflow-hidden flex-shrink-0">
-            {imgUrl ? (
-              <img src={imgUrl} alt={name || 'User'} className="w-full h-full object-cover" />
-            ) : (
-              <span>{name ? name[0].toUpperCase() : 'U'}</span>
-            )}
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Hello,</p>
-            <h2 className="font-bold text-xl md:text-2xl text-gray-800">{name || 'User'}</h2>
-            <p className="text-xs text-gray-500 capitalize">Role: {role || 'user'}</p>
-          </div>
-        </div>
+
+<div
+  onClick={() => {
+    const userId = authData?.userId || JSON.parse(localStorage.getItem('user') || '{}')._id;
+    if (userId) {
+      navigate(`/messages/viewprofile/${userId}`);
+    }
+  }}
+  className="flex items-center mb-6 md:mb-8 flex-col sm:flex-row text-center sm:text-left cursor-pointer"
+>
+  <div className="w-20 h-20 md:w-16 md:h-16 sm:mr-4 mb-4 sm:mb-0 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl md:text-3xl overflow-hidden flex-shrink-0">
+    {imgUrl ? (
+      <img src={imgUrl} alt={name || 'User'} className="w-full h-full object-cover" />
+    ) : (
+      <span>{name ? name[0].toUpperCase() : 'U'}</span>
+    )}
+  </div>
+  <div>
+    <p className="text-sm text-gray-500">Hello,</p>
+    <h2 className="font-bold text-xl md:text-2xl text-gray-800">{name || 'User'}</h2>
+    <p className="text-xs text-gray-500 capitalize">Role: {role || 'user'}</p>
+  </div>
+</div>
+
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 flex-1">

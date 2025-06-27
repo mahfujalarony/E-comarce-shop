@@ -364,7 +364,7 @@ exports.reqmakeadmin = async (req, res) => {
 
 exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
   try {
-    // টোকেন পার্স করা
+
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
       return res.status(401).json({
@@ -373,10 +373,10 @@ exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
       });
     }
 
-    // টোকেন যাচাই
+   
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'yourSecretKey');
 
-    // ইউজার খোঁজা
+  
     const user = await User.findById(decoded.userId).select('name email imgUrl _id role');
     if (!user) {
       return res.status(404).json({
@@ -385,7 +385,7 @@ exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
       });
     }
 
-    // নতুন টোকেন জেনারেট
+   
     const newToken = jwt.sign(
       {
         name: user.name,
@@ -398,7 +398,7 @@ exports.checkTokenValidAndResetLocalStorage = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // রেসপন্স ফরম্যাট ফ্রন্টএন্ডের সাথে মিলিয়ে
+    
     return res.status(200).json({
       success: true,
       message: 'Token is valid',

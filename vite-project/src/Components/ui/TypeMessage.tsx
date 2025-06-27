@@ -79,7 +79,6 @@ const TypeMessage: React.FC<TypeMessageProps> = ({
                 <Button
                   key={index}
                   variant="outline"
-                  size="sm" // আপনার বাটন কম্পোনেন্টে size প্রপ থাকলে
                   onClick={() => handleOptionClick(option)}
                   className="text-xs" // ছোট টেক্সটের জন্য
                 >

@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const messageSocket = (io) => {
-  // ✅ Authentication Middleware
+
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
@@ -16,7 +16,7 @@ const messageSocket = (io) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       socket.user = decoded;
-      console.log('User authenticated:', socket.user);
+    //  console.log('User authenticated:', socket.user);
       next();
     } catch (err) {
       console.error('Invalid token');
@@ -29,32 +29,52 @@ const messageSocket = (io) => {
     console.log('New socket connected:', socket.id);
 
     // ➤ Start chat (by user)
-    socket.on('start_chat', async ({ productId }) => {
-      const userId = socket.user.userId;
-      console.log('start_chat event received:', { userId, productId });
+// ...existing code...
+socket.on('start_chat', async ({ productId }) => {
+  const userId = socket.user.userId;
+  //  console.log('start_chat event received:', { userId, productId });
 
-      try {
-        let conversation = await Conversation.findOne({ createdBy: userId, productId });
+  try {
+    let conversation = await Conversation.findOne({ createdBy: userId, productId })
+      .populate('createdBy', 'name email imgUrl role')
+      .lean();
 
-        if (!conversation) {
-          const chatId = uuidv4();
-          conversation = new Conversation({
-            chatId,
-            productId,
-            createdBy: userId,
-            lastMessageTime: new Date(),
-          });
-          await conversation.save();
-        }
+    if (!conversation) {
+      const chatId = uuidv4();
+      conversation = new Conversation({
+        chatId,
+        productId,
+        createdBy: userId,
+        lastMessageTime: new Date(),
+      });
+      await conversation.save();
+      // নতুন conversation হলে populate করতে হবে
+      conversation = await Conversation.findOne({ chatId })
+        .populate('createdBy', 'name email imgUrl role')
+        .lean();
+    }
 
-        socket.emit('chat_started', conversation);
-        socket.join(conversation.chatId);
-      } catch (error) {
-        console.error('Error starting chat:', error);
-        socket.emit('error', 'Could not start chat');
-      }
-    });
+    // এখানে load_first_chat-এর মতো payload বানান
+    const payload = {
+      id: conversation.chatId || conversation._id.toString(),
+      name: conversation.name || 'Unnamed Chat',
+      user: {
+        name: conversation.createdBy?.name || 'Unknown User',
+        email: conversation.createdBy?.email || '',
+        imgUrl: conversation.createdBy?.imgUrl || '',
+        role: conversation.createdBy?.role || 'user',
+        userId: conversation.createdBy?._id?.toString() || userId,
+      },
+    };
 
+    socket.emit('chat_started', payload);
+    socket.join(conversation.chatId);
+  } catch (error) {
+    // console.error('Error starting chat:', error);
+    socket.emit('error', 'Could not start chat');
+  }
+});
+// ...existing code...
     // ➤ Load first chat for user (for auto navigation)
 // server-side (socket.on)
 // server-side (socket.on)
@@ -63,8 +83,8 @@ socket.on('load_first_chat', async () => {
   const userId = socket.user?.userId;
   const role = socket.user?.role;
 
-  // ডিবাগিং: userId এবং role চেক করুন
-  console.log('Load first chat requested:', { userId, role });
+  
+//  console.log('Load first chat requested:', { userId, role });
 
   if (!userId || !role) {
     console.error('Missing userId or role');
@@ -87,11 +107,11 @@ socket.on('load_first_chat', async () => {
         .lean();
     }
 
-    // ডিবাগিং: কনভার্সেশন ফলাফল চেক করুন
-    console.log('Found conversation:', conversation);
+    
+   // console.log('Found conversation:', conversation);
 
     if (conversation) {
-      // createdBy ফিল্ড থেকে ডেটা নিন, userId নয়
+     
       const payload = {
         id: conversation.chatId || conversation._id.toString(), // chatId না থাকলে _id ব্যবহার করুন
         name: conversation.name || 'Unnamed Chat', // ডিফল্ট নাম
@@ -104,14 +124,14 @@ socket.on('load_first_chat', async () => {
         },
       };
 
-      console.log('Emitting first_chat_loaded with payload:', payload);
+      //console.log('Emitting first_chat_loaded with payload:', payload);
       socket.emit('first_chat_loaded', payload);
     } else {
-      console.log('No conversation found, emitting null');
+     // console.log('No conversation found, emitting null');
       socket.emit('first_chat_loaded', null);
     }
   } catch (error) {
-    console.error('Error loading first chat:', error);
+   // console.error('Error loading first chat:', error);
     socket.emit('error', 'Could not load first chat');
   }
 });
@@ -177,7 +197,7 @@ const formattedConversations = conversations
           role: user.role,
         };
 
-        console.log('User info loaded:', formattedUser);
+//console.log('User info loaded:', formattedUser);
         socket.emit('user_info_loaded', formattedUser);
       } catch (error) {
         console.error('Error loading user info:', error);
@@ -190,7 +210,7 @@ const formattedConversations = conversations
       try{
         const product = await require('../model/ProductModel').findById(productId).lean();
         if (!product) {
-          console.error('Product not found:', productId);
+       //   console.error('Product not found:', productId);
           return socket.emit('error', 'Product not found');
         }
         const formattedProduct = {
@@ -224,7 +244,7 @@ const formattedConversations = conversations
           createdAt: msg.createdAt.toISOString(),
         }));
 
-        console.log('Messages loaded for chatId:', chatId);
+      //  console.log('Messages loaded for chatId:', chatId);
         socket.emit('messages_loaded', formattedMessages);
       } catch (error) {
         console.error('Error loading messages:', error);
@@ -266,7 +286,7 @@ const formattedConversations = conversations
           createdAt: message.createdAt.toISOString(),
         };
 
-        console.log('Message saved and emitted:', formattedMessage);
+        //console.log('Message saved and emitted:', formattedMessage);
         io.to(chatId).emit('new_message', formattedMessage);
       } catch (error) {
         console.error('Error sending message:', error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import NotLogin from '../ui/NotLogin';
 
 interface Product {
   productId?: {
@@ -31,14 +32,30 @@ const MyOrders: React.FC = () => {
   const { authData } = useAuth();
   const userId = authData?.userId;
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    const token = localStorage.getItem('token');
+    return token && authData?.userId;
+  };
+
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    // Check authentication first
+    if (!isAuthenticated()) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchOrders = async () => {
       if (!userId || hasFetched) return;
       setIsLoading(true);
 
       try {
-        const response = await axios.get(`http://localhost:3001/api/getOrders/${userId}`);
-        
+        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/getOrders/${userId}`);
+
         if (Array.isArray(response.data.orders)) {
           setOrders(response.data.orders);
         } else if (Array.isArray(response.data)) {
@@ -62,7 +79,7 @@ const MyOrders: React.FC = () => {
   const handleCancelOrder = async (orderId: string) => {
     try {
       setIsLoading(true);
-      await axios.post(`http://localhost:3001/api/cancelOrder/${orderId}`);
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/cancelOrder/${orderId}`);
       setOrders(prevOrders =>
         prevOrders.map(order =>
           order._id === orderId ? { ...order, status: 'cancelled' } : order
@@ -82,22 +99,28 @@ const MyOrders: React.FC = () => {
     setShowPopup(true);
   };
 
-  // Loading state
+  // If not authenticated, show login prompt
+  if (!isAuthenticated()) {
+    return (
+      <NotLogin title="Please Login to View Your Orders" subject="Orders" />
+    );
+  }
+
+  // Loading state for authenticated users
   if (isLoading && !hasFetched) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your orders...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 py-4 md:py-8 px-2 sm:px-4 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-6 md:mb-8">
-          My Orders
-        </h1>
-        
+      <div className="max-w-7xl mx-auto">        
         {orders.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-6 text-center">
             <p className="text-gray-500 text-lg py-10">
@@ -117,7 +140,6 @@ const MyOrders: React.FC = () => {
               const productName = product.productId?.name || 'Unknown Product';
               const quantity = product.quantity || 0;
               const price = product.price || 0;
-            //  const totalPrice = product.totalPrice || price * quantity;
               const productId = product.productId?._id || 'Unknown ID';
               const image = product.image || 'https://via.placeholder.com/150';
               const status = order.status || 'unknown';
@@ -143,24 +165,24 @@ const MyOrders: React.FC = () => {
                       <div className="mt-1 text-sm text-gray-600 space-y-1">
                         <p>Quantity: {quantity}</p>
                         <p>Price: ${price.toFixed(2)}</p>
-                        <p> TotalPrice: ${price.toFixed(2)}</p>
+                        <p>Total Price: ${price.toFixed(2)}</p>
                         <div className="flex items-center mt-2">
                           <span className="mr-2">Status:</span>
-                            <span
+                          <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : status === 'processing'
-                              ? 'bg-orange-100 text-orange-800'
-                              : status === 'shipped'
-                              ? 'bg-blue-100 text-blue-800'
-                              : status === 'delivered'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : status === 'processing'
+                                ? 'bg-orange-100 text-orange-800'
+                                : status === 'shipped'
+                                ? 'bg-blue-100 text-blue-800'
+                                : status === 'delivered'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
                             }`}
-                            >
+                          >
                             {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </span>
+                          </span>
                         </div>
                       </div>
                     </div>

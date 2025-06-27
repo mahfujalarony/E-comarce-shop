@@ -29,15 +29,23 @@ import ReviewComponent from './Components/product/ReviewComponent.tsx';
 //import UnreadMessageNotification from './Components/ui/MessageNotification.tsx';
 import ViewAddress from './Components/AccountDropdown/ViewAddress.tsx';
 import Message from './Components/message/Message.tsx';
+import SearchResultPage from './Components/Main/SearchResultPage.tsx';
 
 import Admin from './Components/Admin/Admin.tsx'; 
 import RequestAdmin from './Components/Admin/RequestAdmin.tsx'; 
-import InsertOne from './Components/Admin/InsertOne.tsx';
+//import InsertOne from './Components/Admin/InsertOne.tsx';
 import AdminOnlyRoute from './Components/PrivateRoute/AdminOnlyRoute.tsx';
 import ViewProfile from './Components/message/ViewProfile.tsx';
 
 // setting somthing
 import ChangePass from './Components/ui/ChangePass.tsx';
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
+
+import { Toaster } from 'sonner';
 
 function AppWrapper() {
   const location = useLocation();
@@ -51,6 +59,8 @@ function AppWrapper() {
   return (
     <>
       <ScrollToTop />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+      <Toaster />
       <Navbar />
       {/* <UnreadMessageNotification /> */}
       <Routes>
@@ -72,6 +82,9 @@ function AppWrapper() {
         <Route path="/refer" element={<Refer />} />
         <Route path="/support" element={<HelpCenter />} />
         <Route path="/addresses" element={<ViewAddress />} />
+        <Route path="/search" element={<SearchResultPage />} />
+        
+        {/* Message Routes */}
 
 
         <Route path="/messages/:chatId" element={<Message />} />
@@ -94,14 +107,7 @@ function AppWrapper() {
             </AdminOnlyRoute>
           }
         />
-        <Route
-          path="/admin/insert"
-          element={
-            <AdminOnlyRoute>
-              <InsertOne />
-            </AdminOnlyRoute>
-          }
-        />
+
 
       </Routes>
       {!shouldHideFooter && <Footer />}

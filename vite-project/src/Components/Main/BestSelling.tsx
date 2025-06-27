@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { GoArrowRight } from 'react-icons/go';
-import { useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useInfiniteQuery, QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Rating from '../ui/Rating';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { toast } from 'react-toastify';
 
 interface Product {
   _id: string;
@@ -20,11 +21,28 @@ interface Product {
 
 const queryClient = new QueryClient();
 
-const API_URL = 'http://localhost:3001/api/products';
+const API_URL = `${import.meta.env.VITE_APP_API_URL}/api/products`;
 
 const BestSellingComponent: React.FC = () => {
   const navigate = useNavigate();
+  const queryClientInstance = useQueryClient();
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [horizontalScrollPosition, setHorizontalScrollPosition] = useState(0);
+
+  // State এবং scroll positions restore করুন
+  useEffect(() => {
+    const savedPageScroll = sessionStorage.getItem('bestSellingPageScrollPosition');
+    const savedHorizontalScroll = sessionStorage.getItem('bestSellingHorizontalScrollPosition');
+    
+    if (savedPageScroll) {
+      setScrollPosition(parseInt(savedPageScroll));
+    }
+    
+    if (savedHorizontalScroll) {
+      setHorizontalScrollPosition(parseInt(savedHorizontalScroll));
+    }
+  }, []);
 
   // Horizontal Products Query
   const {
@@ -41,11 +59,37 @@ const BestSellingComponent: React.FC = () => {
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length ? allPages.length * 5 : undefined;
+      return lastPage.length ? allPages.length * 8 : undefined;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
   });
 
   const flattenedHorizontalProducts = horizontalProducts?.pages?.flat() || [];
+
+  // Page scroll position restore করুন
+  useEffect(() => {
+    if (flattenedHorizontalProducts.length > 0 && scrollPosition > 0) {
+      setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+        sessionStorage.removeItem('bestSellingPageScrollPosition');
+        setScrollPosition(0);
+      }, 100);
+    }
+  }, [flattenedHorizontalProducts.length, scrollPosition]);
+
+  // Horizontal scroll position restore করুন
+  useEffect(() => {
+    if (flattenedHorizontalProducts.length > 0 && horizontalScrollPosition > 0 && horizontalContainerRef.current) {
+      setTimeout(() => {
+        if (horizontalContainerRef.current) {
+          horizontalContainerRef.current.scrollLeft = horizontalScrollPosition;
+          sessionStorage.removeItem('bestSellingHorizontalScrollPosition');
+          setHorizontalScrollPosition(0);
+        }
+      }, 100);
+    }
+  }, [flattenedHorizontalProducts.length, horizontalScrollPosition]);
 
   const loadMoreHorizontal = async () => {
     await fetchMoreHorizontal();
@@ -59,6 +103,15 @@ const BestSellingComponent: React.FC = () => {
   };
 
   const handleProductClick = (productId: string) => {
+    // Page scroll position save করুন
+    const currentScrollPosition = window.pageYOffset;
+    sessionStorage.setItem('bestSellingPageScrollPosition', currentScrollPosition.toString());
+    
+    // Horizontal scroll position save করুন
+    if (horizontalContainerRef.current) {
+      sessionStorage.setItem('bestSellingHorizontalScrollPosition', horizontalContainerRef.current.scrollLeft.toString());
+    }
+    
     navigate(`/details/${productId}`);
   };
 
@@ -67,13 +120,12 @@ const BestSellingComponent: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Please login first');
-        navigate('/login');
+        toast.info('Please login first');
         return;
       }
 
       const response = await axios.post(
-        'http://localhost:3001/api/addwishlist',
+        `${import.meta.env.VITE_APP_API_URL}/api/addwishlist`,
         { productId: product._id },
         {
           headers: {
@@ -83,13 +135,31 @@ const BestSellingComponent: React.FC = () => {
         }
       );
 
-      if (response.data.message) {
-        alert(response.data.message);
+      // Always show backend message
+      if (response.data?.success) {
+        toast.success(response.data.message || 'Product added to wishlist.');
       } else {
-        alert(`${product.name} has been added to wishlist!`);
+        toast.error(response.data.message || 'Failed to add to wishlist.');
       }
     } catch (error: any) {
-      alert('Error adding to cart: ' + (error.response?.data?.message || error.message));
+      if (error.response) {
+        toast.error(error.response.data?.message || 'Failed to add to wishlist.');
+      } else if (error.request) {
+        toast.error('No response received from server. Please check your network connection.');
+      } else {
+        toast.error(error.message);
+      }
+    }
+  };
+
+  // Manual refresh function (optional)
+  const handleRefresh = () => {
+    queryClientInstance.invalidateQueries({ queryKey: ['bestSellingHorizontal'] });
+    sessionStorage.removeItem('bestSellingPageScrollPosition');
+    sessionStorage.removeItem('bestSellingHorizontalScrollPosition');
+    window.scrollTo(0, 0);
+    if (horizontalContainerRef.current) {
+      horizontalContainerRef.current.scrollLeft = 0;
     }
   };
 
@@ -163,7 +233,17 @@ const BestSellingComponent: React.FC = () => {
   }
 
   if (horizontalError) {
-    return <div className="text-center py-10 text-red-500">Error loading products</div>;
+    return (
+      <div className="text-center py-10 text-red-500">
+        <p>Error loading products</p>
+        <button 
+          onClick={handleRefresh}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -179,13 +259,23 @@ const BestSellingComponent: React.FC = () => {
             Best Selling Products
           </h1>
         </div>
-        <button
-          onClick={handleViewMore}
-          className="mt-6 sm:mt-0 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-          disabled={horizontalLoading}
-        >
-          {horizontalLoading ? 'Loading...' : 'View More'}
-        </button>
+        <div className="flex gap-2 mt-6 sm:mt-0">
+          <button
+            onClick={handleViewMore}
+            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            disabled={horizontalLoading}
+          >
+            {horizontalLoading ? 'Loading...' : 'View More'}
+          </button>
+          {/* Optional refresh button */}
+          <button
+            onClick={handleRefresh}
+            className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            title="Refresh products"
+          >
+            ↻
+          </button>
+        </div>
       </div>
 
       {/* Products */}
@@ -194,8 +284,9 @@ const BestSellingComponent: React.FC = () => {
           <h2 className="text-xl font-semibold">Top Picks</h2>
           <button
             onClick={loadMoreHorizontal}
-            className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+            className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
             disabled={horizontalLoading}
+            title="Load more products"
           >
             <GoArrowRight size={24} />
           </button>
@@ -233,7 +324,7 @@ const BestSellingComponent: React.FC = () => {
                     e.stopPropagation();
                     handleAddToCart(product);
                   }}
-                  className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  className="hover:scale-95 mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-all"
                 >
                   Add to Cart
                 </button>
@@ -242,10 +333,15 @@ const BestSellingComponent: React.FC = () => {
           ))}
         </div>
 
-        {horizontalLoading && <div className="text-center py-4">Loading more products...</div>}
+        {horizontalLoading && (
+          <div className="text-center py-4 text-gray-600">
+            Loading more products...
+          </div>
+        )}
       </div>
 
-      <div className="bg-black flex flex-col-reverse md:flex-row h-auto md:h-[100vh]">
+      {/* Banner Section */}
+      <div className="bg-black flex flex-col-reverse md:flex-row h-auto md:h-[100vh] rounded-lg overflow-hidden">
         {/* Text section */}
         <div className="text-white flex-1 space-y-8 flex flex-col justify-center items-start px-6 md:px-10 py-10 md:py-0">
           <p className="text-[#00FF66] text-sm md:text-base">Categories</p>
@@ -263,7 +359,7 @@ const BestSellingComponent: React.FC = () => {
             ].map((item, index) => (
               <div
                 key={index}
-                className="h-20 w-20 flex flex-col justify-center items-center font-semibold bg-white text-black rounded-full"
+                className="h-20 w-20 flex flex-col justify-center items-center font-semibold bg-white text-black rounded-full hover:scale-105 transition-transform"
               >
                 <p className="text-lg">{item.value}</p>
                 <p className="text-sm">{item.label}</p>
@@ -272,7 +368,7 @@ const BestSellingComponent: React.FC = () => {
           </div>
 
           {/* Button */}
-          <button className="bg-[#00FF66] text-black w-32 md:w-36 h-12 md:h-16 rounded-md hover:scale-95 transition duration-200 flex justify-center items-center">
+          <button className="bg-[#00FF66] text-black w-32 md:w-36 h-12 md:h-16 rounded-md hover:scale-95 transition duration-200 flex justify-center items-center font-semibold">
             Buy Now
           </button>
         </div>

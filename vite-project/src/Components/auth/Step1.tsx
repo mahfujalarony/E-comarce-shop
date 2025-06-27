@@ -59,7 +59,7 @@ const Step1: React.FC = () => {
       const email = user.email ?? "";
       const imgUrl = user.photoURL ?? "";
 
-      const response = await axios.post("http://localhost:3001/api/google", {
+      const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/google`, {
         name,
         email,
         imgUrl,
@@ -70,13 +70,14 @@ const Step1: React.FC = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(backendUser));
 
-      setAuthData({
-        isAuthenticated: true,
-        name: backendUser.name,
-        email: backendUser.email,
-        password: "",
-        imgUrl: backendUser.imgUrl,
-      });
+setAuthData({
+  isAuthenticated: true,
+  name: backendUser.name,
+  email: backendUser.email,
+  password: "",
+  imgUrl: backendUser.imgUrl,
+  userId: backendUser._id, 
+});
 
       navigate("/");
     } catch (error) {

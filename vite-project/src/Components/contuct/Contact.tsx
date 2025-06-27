@@ -1,4 +1,5 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
+import type { FormEvent } from 'react';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({

@@ -23,7 +23,7 @@ const ForgotPassword: React.FC = () => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:3001/api/reset-password-send-otp", { email });
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/reset-password-send-otp`, { email });
       setMessage({ text: "OTP sent to your email", type: "success" });
       setStep(2);
     } catch (error) {
@@ -48,7 +48,7 @@ const ForgotPassword: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:3001/api/reset-password-verify-otp", {
+      const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/reset-password-verify-otp`, {
         email,
         code: otp
       });
@@ -84,7 +84,7 @@ const ForgotPassword: React.FC = () => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:3001/api/reset-password", {
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/reset-password`, {
         email,
         newPassword
       });

@@ -3,6 +3,7 @@ import { FaHeart, FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import NotLogin from '../ui/NotLogin';
 
 interface FormData {
   fullName: string ;
@@ -16,7 +17,7 @@ interface FormData {
   country: string;
 }
 
-const AddressForm = () => {
+const AddressForm: React.FC = () => {
   const navigate = useNavigate();
   const { authData } = useAuth();
   const userId: string | null = authData?.userId || null;
@@ -38,6 +39,11 @@ const AddressForm = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const token = localStorage.getItem('token');
+
+  if(!token) {
+    return <NotLogin title='Please Login to Access Your Address' subject='Address' />
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,7 +58,7 @@ const AddressForm = () => {
     setError(null);
 
     try {
-      await axios.post('http://localhost:3001/api/create', formData, {
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/create`, formData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,

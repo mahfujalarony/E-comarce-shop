@@ -51,7 +51,8 @@ interface UserProfileData {
 }
 
 const fetchUserProfile = async (userId: string): Promise<UserProfileData> => {
-  const response = await axios.get(`http://localhost:3001/api/userProfile/${userId}`, {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const response = await axios.get(`${apiUrl}/api/userProfile/${userId}`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`
     }

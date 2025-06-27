@@ -7,7 +7,7 @@ const socketIo = require('socket.io');
 const http = require('http');
 
 const productRouter = require('./routers/productRouters');
-const cartRouter = require('./routers/cartRouter');
+//const cartRouter = require('./routers/cartRouter');
 const reviewRouter = require('./routers/reviewRouter');
 const imgRouter = require('./routers/imgRouter');
 const authRouter = require('./routers/authRouter');
@@ -38,7 +38,7 @@ app.use(cors());
 app.use('/api', productRouter);
 app.use('/api', imgRouter);
 // app.use('/api', userRouter);
-app.use('/api', cartRouter);
+//app.use('/api', cartRouter);
 app.use('/api', reviewRouter);
 app.use('/api', authRouter);
 app.use('/api', addressRoutes);

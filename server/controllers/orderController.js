@@ -41,7 +41,7 @@ exports.createOrder = async (req, res) => {
 };
 
 exports.getOrders = async (req, res) => {
-      const userId = req.params.userId || req.user.id;
+      const userId = req.params.userId || req.user._id;
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -49,10 +49,13 @@ exports.getOrders = async (req, res) => {
   try {
 
 
-    const orders = await Order.find({ userId }).populate('product.productId', 'name price images');
+    const orders = await Order.find({ userId })
+    .populate('product.productId', 'name price images')
+    .sort({ createdAt: -1 })
+    ;
 
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ message: 'No orders found' });
+      return res.status(404).json({ orders: [] });
     }
 
     res.status(200).json({ orders });

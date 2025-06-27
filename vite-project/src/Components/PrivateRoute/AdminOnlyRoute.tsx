@@ -22,7 +22,7 @@ const AdminOnlyRoute: React.FC<AdminOnlyRouteProps> = ({ children }) => {
           return;
         }
 
-        await axios.get('http://localhost:3001/api/roleckk', {
+        await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/roleckk`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

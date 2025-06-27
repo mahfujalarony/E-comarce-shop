@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GoArrowRight, GoArrowLeft } from 'react-icons/go';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Rating from '../ui/Rating';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { toast } from 'react-toastify';
 
 type Product = {
   _id: string;
@@ -19,12 +20,23 @@ type Product = {
 };
 
 const fetchProducts = async ({ pageParam = 0 }) => {
-  const response = await axios.get(`http://localhost:3001/api/products?limit=20&offset=${pageParam}`);
+  const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/products?limit=20&offset=${pageParam}`);
   return response.data;
 };
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  // Page load হওয়ার সময় scroll position restore করুন
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem('exploreScrollPosition');
+    
+    if (savedScrollPosition) {
+      setScrollPosition(parseInt(savedScrollPosition));
+    }
+  }, []);
 
   const {
     data,
@@ -41,26 +53,41 @@ const Explore: React.FC = () => {
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length ? allPages.length * 20 : undefined;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
   });
 
   const products = data?.pages.flat() || [];
 
+  // Products load হওয়ার পর scroll position restore করুন
+  useEffect(() => {
+    if (products.length > 0 && scrollPosition > 0) {
+      setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+        sessionStorage.removeItem('exploreScrollPosition'); // restore করার পর remove করুন
+        setScrollPosition(0);
+      }, 100);
+    }
+  }, [products.length, scrollPosition]);
+
   const handleProductClick = (productId: string) => {
+    // Current scroll position save করুন
+    const currentScrollPosition = window.pageYOffset;
+    sessionStorage.setItem('exploreScrollPosition', currentScrollPosition.toString());
+    
     navigate(`/details/${productId}`);
   };
 
-  // Add to Cart Function (যেহেতু এটি কোডে কমেন্ট করা ছিল, আমি এটি যোগ করছি)
   const handleAddToCart = async (product: Product) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Please login first');
-        navigate('/login');
+        toast.info('Please login first');
         return;
       }
 
       const response = await axios.post(
-        'http://localhost:3001/api/addwishlist',
+        `${import.meta.env.VITE_APP_API_URL}/api/addwishlist`,
         { productId: product._id },
         {
           headers: {
@@ -70,14 +97,37 @@ const Explore: React.FC = () => {
         }
       );
 
-      if (response.data.message) {
-        alert(response.data.message);
+      // Always show backend message
+      if (response.data?.success) {
+        toast.success(response.data.message || 'Product added to wishlist.');
       } else {
-        alert(`${product.name} has been added to wishlist!`);
+        toast.error(response.data.message || 'Failed to add to wishlist.');
       }
     } catch (error: any) {
-      alert('Error adding to cart: ' + (error.response?.data?.message || error.message));
+      if (error.response) {
+        toast.error(error.response.data?.message || 'Failed to add to wishlist.');
+      } else if (error.request) {
+        toast.error('No response received from server. Please check your network connection.');
+      } else {
+        toast.error(error.message);
+      }
     }
+  };
+
+  // Manual refresh function (optional)
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['exploreProducts'] });
+    sessionStorage.removeItem('exploreScrollPosition');
+    window.scrollTo(0, 0);
+  };
+
+  // Navigation functions for arrow buttons (optional enhancement)
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToBottom = () => {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
   // Skeleton for Vertical Products
@@ -130,7 +180,13 @@ const Explore: React.FC = () => {
   if (isError) {
     return (
       <div className="text-center py-10 text-red-500">
-        Error: {error.message}
+        <p>Error: {error.message}</p>
+        <button 
+          onClick={handleRefresh}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -146,17 +202,35 @@ const Explore: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-semibold mt-4">New Arrival</h1>
         </div>
         <div className="flex space-x-3 text-xl">
-          <button className="p-2 bg-gray-200 rounded-full hover:bg-gray-300">
+          <button 
+            onClick={scrollToTop}
+            className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+            title="Scroll to top"
+          >
             <GoArrowLeft />
           </button>
-          <button className="p-2 bg-gray-200 rounded-full hover:bg-gray-300">
+          <button 
+            onClick={scrollToBottom}
+            className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+            title="Scroll to bottom"
+          >
             <GoArrowRight />
           </button>
         </div>
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold mb-4">All Products</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">All Products</h2>
+          {/* Optional refresh button */}
+          <button 
+            onClick={handleRefresh}
+            className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
+          >
+            Refresh
+          </button>
+        </div>
+        
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {products.map((product: Product) => (
             <div
@@ -186,7 +260,7 @@ const Explore: React.FC = () => {
                     e.stopPropagation();
                     handleAddToCart(product);
                   }}
-                  className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  className="hover:scale-x-95 mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-transform"
                 >
                   Add to Cart
                 </button>
@@ -200,7 +274,7 @@ const Explore: React.FC = () => {
         <div className="text-center mt-6">
           <button
             onClick={() => fetchNextPage()}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
             disabled={isFetchingNextPage}
           >
             {isFetchingNextPage ? 'Loading...' : 'Load More'}

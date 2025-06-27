@@ -54,7 +54,7 @@ interface ProductsApiResponse {
 
 // API functions
 const fetchProducts = async (page: number, limit: number): Promise<ProductsApiResponse> => {
-  const response = await axios.get(`http://localhost:3001/api/fetchProducts`, {
+  const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/fetchProducts`, {
     params: { page, limit },
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -65,7 +65,7 @@ const fetchProducts = async (page: number, limit: number): Promise<ProductsApiRe
 
 const updateProduct = async (productData: { id: string; data: Partial<Product> }) => {
   const response = await axios.patch(
-    `http://localhost:3001/api/updateProduct/${productData.id}`,
+    `${import.meta.env.VITE_APP_API_URL}/api/updateProduct/${productData.id}`,
     productData.data,
     {
       headers: {
@@ -79,7 +79,7 @@ const updateProduct = async (productData: { id: string; data: Partial<Product> }
 
 const deleteProduct = async (productId: string) => {
   const response = await axios.delete(
-    `http://localhost:3001/api/deleteProduct/${productId}`,
+    `${import.meta.env.VITE_APP_API_URL}/api/deleteProduct/${productId}`,
     {
       headers: {
         'Content-Type': 'application/json',

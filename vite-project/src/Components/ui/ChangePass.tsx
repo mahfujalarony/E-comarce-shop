@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertTitle, Snackbar, CircularProgress } from '@mui/material';
+import NotLogin from './NotLogin';
 
 // Form data interface
 interface ChangePasswordFormData {
@@ -17,6 +18,24 @@ const ChangePass: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    const token = localStorage.getItem('token');
+    return !!token; // Convert to boolean
+  };
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      setIsCheckingAuth(false);
+    };
+    
+    // Small delay to avoid flash
+    const timer = setTimeout(checkAuth, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Navigate to homepage after successful password change
   useEffect(() => {
@@ -56,7 +75,7 @@ const ChangePass: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:3001/api/change-password', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/change-password`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage(response.data.message || "Password changed successfully!");
@@ -70,6 +89,26 @@ const ChangePass: React.FC = () => {
     }
   };
 
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show login prompt
+  if (!isAuthenticated()) {
+    return (
+      <NotLogin title='Please Login to Change Your Password' subject='Change Password' />
+    );
+  }
+
+  // Main change password form (only shown if authenticated)
   return (
     <div className="min-h-screen flex justify-center items-center p-4 bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6 sm:p-8">

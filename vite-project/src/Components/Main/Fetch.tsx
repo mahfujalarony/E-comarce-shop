@@ -2,12 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { GoArrowRight } from 'react-icons/go';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import Rating from '../ui/Rating';
-//import { useAuth } from '../auth/AuthContext';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-
+import { toast } from 'react-toastify';
 
 interface Product {
   _id: string;
@@ -29,23 +28,17 @@ interface Product {
 const queryClient = new QueryClient();
 
 const fetchProducts = async ({ pageParam = 0 }) => {
-  const response = await axios.get(`http://localhost:3001/api/products?limit=20&offset=${pageParam}`);
-  //console.log('Fetched products:', response.data);
+  const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/products?limit=20&offset=${pageParam}`);
   return response.data;
 };
 
 const ProductList: React.FC = () => {
-
-
-
+  const queryClientInstance = useQueryClient();
   const [timer, setTimer] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [cartLoading, setCartLoading] = useState<string | null>(null);
-  const [showVerticalProducts, setShowVerticalProducts] = useState(false); // New state to control vertical products display
+  const [showVerticalProducts, setShowVerticalProducts] = useState(false);
+  const [horizontalScrollPosition, setHorizontalScrollPosition] = useState(0); // horizontal scroll position এর জন্য
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  //const { authData } = useAuth();
-  //const token = authData.token || localStorage.getItem('token');
-
 
   // Timer Logic
   useEffect(() => {
@@ -69,16 +62,60 @@ const ProductList: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Horizontal Products (initial 5)
+  // State এবং scroll position restore করুন
+  useEffect(() => {
+    const savedVerticalState = sessionStorage.getItem('showVerticalProducts');
+    const savedPageScroll = sessionStorage.getItem('pageScrollPosition');
+    const savedHorizontalScroll = sessionStorage.getItem('horizontalScrollPosition');
+    
+    if (savedVerticalState === 'true') {
+      setShowVerticalProducts(true);
+    }
+    
+    if (savedPageScroll) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPageScroll));
+        sessionStorage.removeItem('pageScrollPosition');
+      }, 100);
+    }
+
+    if (savedHorizontalScroll) {
+      setHorizontalScrollPosition(parseInt(savedHorizontalScroll));
+    }
+  }, []);
+
+  // Cache থেকে data check করুন
+  useEffect(() => {
+    const cachedVerticalData = queryClientInstance.getQueryData(['verticalProducts']);
+    if (cachedVerticalData) {
+      setShowVerticalProducts(true);
+    }
+  }, [queryClientInstance]);
+
+  // Horizontal Products (enhanced with persistence)
   const { data: horizontalProducts = [], isLoading: horizontalLoading } = useQuery<Product[]>({
     queryKey: ['horizontalProducts'],
     queryFn: async () => {
-      const response = await axios.get('http://localhost:3001/api/products?limit=8&offset=0');
+      const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/products?limit=8&offset=0`);
       return response.data;
     },
+    staleTime: 5 * 60 * 1000, // horizontal products এর জন্যও cache time বাড়ানো
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Vertical Products (infinite scroll, only fetched when button is clicked)
+  // Horizontal scroll position restore করুন যখন products load হয়
+  useEffect(() => {
+    if (horizontalProducts.length > 0 && horizontalScrollPosition > 0 && horizontalContainerRef.current) {
+      setTimeout(() => {
+        if (horizontalContainerRef.current) {
+          horizontalContainerRef.current.scrollLeft = horizontalScrollPosition;
+          sessionStorage.removeItem('horizontalScrollPosition'); // restore করার পর remove করুন
+        }
+      }, 100);
+    }
+  }, [horizontalProducts.length, horizontalScrollPosition]);
+
+  // Vertical Products
   const {
     data: verticalPages,
     fetchNextPage: fetchMoreVertical,
@@ -92,24 +129,46 @@ const ProductList: React.FC = () => {
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length ? allPages.length * 20 : undefined;
     },
-    enabled: showVerticalProducts, // Only fetch when showVerticalProducts is true
+    enabled: showVerticalProducts,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const verticalProducts = verticalPages?.pages.flat() || [];
 
+  const handleLoadAllProducts = () => {
+    setShowVerticalProducts(true);
+    sessionStorage.setItem('showVerticalProducts', 'true');
+  };
+
+  const handleProductClick = (product: Product) => {
+    // Page scroll position save করুন
+    sessionStorage.setItem('pageScrollPosition', window.pageYOffset.toString());
+    
+    // Horizontal scroll position save করুন
+    if (horizontalContainerRef.current) {
+      sessionStorage.setItem('horizontalScrollPosition', horizontalContainerRef.current.scrollLeft.toString());
+    }
+    
+    // Vertical products state save করুন
+    if (showVerticalProducts) {
+      sessionStorage.setItem('showVerticalProducts', 'true');
+    }
+    
+    navigate(`/details/${product._id}`);
+  };
+
   // Add to Cart Function
   const handleAddToCart = async (product: Product) => {
-    setCartLoading(product._id);
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Please login first');
-        navigate('/login');
+        toast.info('Please login first');
         return;
       }
 
       const response = await axios.post(
-        'http://localhost:3001/api/addwishlist',
+        `${import.meta.env.VITE_APP_API_URL}/api/addwishlist`,
         { productId: product._id },
         {
           headers: {
@@ -119,29 +178,26 @@ const ProductList: React.FC = () => {
         }
       );
 
-      if (response.data.message) {
-        alert(response.data.message);
+      if (response.data?.success) {
+        toast.success(response.data.message || 'Product added to wishlist.');
       } else {
-        alert(`${product.name} has been added to wishlist!`);
+        toast.error(response.data.message || 'Failed to add to wishlist.');
       }
     } catch (error: any) {
       if (error.response) {
-        const errorMessage = error.response.data.message || 'Failed to add to cart. Please try again.';
-        alert(errorMessage);
+        toast.error(error.response.data?.message || 'Failed to add to wishlist.');
       } else if (error.request) {
-        alert('No response received from server. Please check your network connection.');
+        toast.error('No response received from server. Please check your network connection.');
       } else {
-        alert('Error adding to cart: ' + error.message);
+        toast.error(error.message);
       }
-    } finally {
-      setCartLoading(null);
     }
   };
 
   const loadMoreHorizontal = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/products?limit=20&offset=${horizontalProducts.length}`
+        `${import.meta.env.VITE_APP_API_URL}/api/products?limit=20&offset=${horizontalProducts.length}`
       );
       const newProducts = response.data;
 
@@ -150,12 +206,13 @@ const ProductList: React.FC = () => {
         return;
       }
 
-      queryClient.setQueryData(['horizontalProducts'], (old: Product[] | undefined) => {
+      queryClientInstance.setQueryData(['horizontalProducts'], (old: Product[] | undefined) => {
         const existingIds = new Set(old?.map((p) => p._id));
         const uniqueNewProducts = newProducts.filter((p: Product) => !existingIds.has(p._id));
         return [...(old || []), ...uniqueNewProducts];
       });
 
+      // Load more করার পর scroll position update করুন
       if (horizontalContainerRef.current) {
         horizontalContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
       }
@@ -164,7 +221,7 @@ const ProductList: React.FC = () => {
     }
   };
 
-  // Skeleton for Horizontal Products
+  // Skeleton Components
   const renderHorizontalSkeleton = () => (
     <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-300">
       {[...Array(5)].map((_, i) => (
@@ -184,7 +241,6 @@ const ProductList: React.FC = () => {
     </div>
   );
 
-  // Skeleton for Vertical Products
   const renderVerticalSkeleton = () => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {[...Array(10)].map((_, i) => (
@@ -203,15 +259,6 @@ const ProductList: React.FC = () => {
       ))}
     </div>
   );
-
-  // Function to handle "Load All Products" button click
-  const handleLoadAllProducts = () => {
-    setShowVerticalProducts(true);
-  };
-
-  const handleProductClick = (product: Product) => {
-    navigate(`/details/${product._id}`);
-  };
 
   if (horizontalLoading) {
     return (
@@ -323,10 +370,9 @@ const ProductList: React.FC = () => {
                       e.stopPropagation();
                       handleAddToCart(product);
                     }}
-                    className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-                    disabled={cartLoading === product._id}
+                    className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 hover:scale-x-95"
                   >
-                    {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
+                    Add to Cart
                   </button>
                 </div>
               </div>
@@ -358,7 +404,7 @@ const ProductList: React.FC = () => {
               {verticalProducts.map((product) => (
                 <div
                   key={product._id}
-                  onClick={() => navigate(`/details/${product._id}`)}
+                  onClick={() => handleProductClick(product)}
                   className="relative w-full h-80 border rounded-lg cursor-pointer"
                 >
                   <img
@@ -383,10 +429,9 @@ const ProductList: React.FC = () => {
                         e.stopPropagation();
                         handleAddToCart(product);
                       }}
-                      className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-                      disabled={cartLoading === product._id}
+                      className="mt-4 w-full py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 hover:scale-x-95"
                     >
-                      {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
+                      Add to Cart
                     </button>
                   </div>
                 </div>

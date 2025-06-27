@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaStar, FaThumbsUp } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 // Review type with like field and user like tracking
 interface ReviewType {
@@ -32,6 +33,7 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [totalReviews, setTotalReviews] = useState<number>(0);
   const [averageRating, setAverageRating] = useState<number>(0);
+  const navigate = useNavigate();
 
   // Fetch reviews and ratings
   const fetchReviews = async (reset: boolean = false) => {
@@ -41,8 +43,8 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
     setError(null);
     try {
       const pageToFetch = reset ? 1 : page;
-      const res = await axios.get(`http://localhost:3001/api/getreviews/${productId}?page=${pageToFetch}&limit=10`);
-      const res2 = await axios.get(`http://localhost:3001/api/getrating/${productId}`);
+      const res = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/getreviews/${productId}?page=${pageToFetch}&limit=10`);
+      const res2 = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/getrating/${productId}`);
       // Ensure likedBy field defaults to array
       const newReviews = Array.isArray(res.data)
         ? res.data.map((rev: ReviewType) => ({
@@ -74,7 +76,7 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
     setLoading(true);
     setError(null);
     try {
-      await axios.post("http://localhost:3001/api/reviews", {
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/reviews`, {
         rating,
         review: reviewText,
         userId: currentUserId,
@@ -98,7 +100,7 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
   // Like handler
   const handleLike = async (reviewId: string, isLiked: boolean) => {
     try {
-      await axios.post(`http://localhost:3001/api/like/${reviewId}`, {
+      await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/like/${reviewId}`, {
         userId: currentUserId,
         action: isLiked ? "unlike" : "like",
       });
@@ -203,7 +205,7 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
       {/* Review list */}
       <div className="space-y-6">
         {loading && !reviews.length ? (
-          <div className="text-center text-gray-600">
+          <div className="text-center text-gray-600 ">
             <svg
               className="animate-spin h-5 w-5 mx-auto text-blue-600"
               xmlns="http://www.w3.org/2000/svg"
@@ -232,7 +234,8 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
           reviews.map((rev) => (
             <div
               key={rev._id}
-              className="bg-white shadow-md rounded-lg p-6 flex flex-col sm:flex-row gap-4 border-b"
+              className="hover:bg-gray-100 bg-white shadow-md rounded-lg p-6 flex flex-col sm:flex-row gap-4 border-b"
+              onClick={() => navigate(`/messages/viewprofile/${rev.userId._id}`)} // Navigate to user profile
             >
               <div className="flex-shrink-0">
                 <img

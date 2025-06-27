@@ -28,16 +28,7 @@ const getAllProducts = async (req, res) => {
 };
 
 
-// const getAllProducts = async (req, res) => {
-//   try {
-//     const products = await Product.find();
-//     res.status(200).json(products);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server Error', error });
-//   }
-// };
 
-// একটি নির্দিষ্ট প্রোডাক্ট ফেচ করা (ID দিয়ে)
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -52,8 +43,57 @@ const getProductById = async (req, res) => {
 
 
 
+const searchProduct = async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    if (!q.trim()) {
+      return res.status(400).json({ message: 'No search keyword provided' });
+    }
+
+    // Atlas Search (fuzzy)
+    const results = await Product.aggregate([
+      {
+        $search: {
+          index: 'default',
+          text: {
+            query: q,
+            path: ['name', 'description', 'brand', 'category', 'tags'],
+            fuzzy: { maxEdits: 2 }
+          }
+        }
+      },
+      { $skip: skip },
+      { $limit: limit }
+    ]);
+
+    // Total count (for pagination)
+    const countAgg = await Product.aggregate([
+      {
+        $search: {
+          index: 'default',
+          text: {
+            query: q,
+            path: ['name', 'description', 'brand', 'category', 'tags'],
+            fuzzy: { maxEdits: 2 }
+          }
+        }
+      },
+      { $count: "total" }
+    ]);
+    const total = countAgg[0]?.total || 0;
+
+    res.status(200).json({ products: results, total });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+module.exports = { createProduct, getAllProducts, getProductById, searchProduct };
 
 
 
-
-module.exports = { createProduct, getAllProducts, getProductById };

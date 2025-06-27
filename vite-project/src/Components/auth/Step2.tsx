@@ -4,7 +4,7 @@ import axios from "axios";
 import { useState, useRef } from "react";
 
 const Step2: React.FC = () => {
-  const { authData, setAuthData } = useAuth();
+  const { setAuthData } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -54,7 +54,7 @@ const Step2: React.FC = () => {
     formData.append("images", selectedFile);
 
     try {
-      const response = await axios.post("http://localhost:3001/api/image", formData, {
+      const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/image`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

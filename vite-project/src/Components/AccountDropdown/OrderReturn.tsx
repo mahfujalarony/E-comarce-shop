@@ -1,9 +1,11 @@
 import React from 'react'
+import NotFound from '../error/NotFound'
+
 
 const OrderReturn: React.FC = () => {
   return (
     <div>
-      <h2>Order Returns</h2>
+      <NotFound />
     </div>
   )
 }

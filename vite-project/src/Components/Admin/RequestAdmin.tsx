@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { type FormEvent } from 'react';
 import axios from 'axios';
 import { Box, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
+import NotLogin from '../ui/NotLogin';
 
 const RequestAdmin: React.FC = () => {
   const [code, setCode] = useState<string[]>(Array(16).fill(''));
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const token = localStorage.getItem('token');
+
+  if(!token) {
+    return <NotLogin title="please Login to Admin Verification" subject="Admin Verification" />;
+  }
 
   const handleCodeChange = (index: number, value: string) => {
     if (value.length > 1 || !/^[0-9a-zA-Z]?$/.test(value)) return;
@@ -66,7 +72,7 @@ const RequestAdmin: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:3001/api/reqmakeadmin',
+        `${import.meta.env.VITE_APP_API_URL}/api/reqmakeadmin`,
         { code: verificationCode },
         {
           headers: {

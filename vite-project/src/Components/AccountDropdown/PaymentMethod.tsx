@@ -53,7 +53,7 @@ const confirmCashOnDelivery = async () => {
   setIsProcessing(true);
   try {
     await axios.post(
-      'http://localhost:3001/api/cash-on-delivery',
+      `${import.meta.env.VITE_APP_API_URL}/api/cash-on-delivery`,
       {
       id,
       quantity,
@@ -96,12 +96,13 @@ const confirmCashOnDelivery = async () => {
 
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/getaddress`,
+        const response = await axios.get(
+          `${import.meta.env.VITE_APP_API_URL}/api/getaddress`,
           {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-        }
+            },
           }
         );
         setAddresses(response.data);
@@ -116,7 +117,7 @@ const confirmCashOnDelivery = async () => {
 
   const handleDeleteAddress = async () => {
     try {
-      await axios.delete(`http://localhost:3001/api/delete/${addresses[0]?._id}`, {
+      await axios.delete(`${import.meta.env.VITE_APP_API_URL}/api/delete/${addresses[0]?._id}`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
@@ -146,26 +147,7 @@ const confirmCashOnDelivery = async () => {
     setShowCODConfirmationPopup(true); // Show COD confirmation popup
   };
 
-  // const confirmCashOnDelivery = async () => {
-  //   setIsProcessing(true);
-  //   try {
-  //     await axios.post('http://localhost:3001/api/cash-on-delivery', {
-  //       userId,
-  //       id,
-  //       quantity,
-  //     });
-  //     setIsProcessing(false);
-  //     setShowCODConfirmationPopup(false);
-  //     //alert('Order placed successfully!');
-  //     <SimpleAlert message="Order placed successfully!" />;
-  //     navigate('/orders');
-  //   } catch (error) {
-  //     setIsProcessing(false);
-  //     setShowCODConfirmationPopup(false);
-  //     setError('Failed to place order. Please try again.');
-  //   }
-  // };
-
+  
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // if (!userId) {

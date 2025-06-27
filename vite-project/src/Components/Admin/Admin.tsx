@@ -21,6 +21,7 @@ import Analytics from './Analytics';
 import NotFound from '../error/NotFound';
 import DashBoardPreview from './DashBoardPreview';
 import Setting from './Setting';
+import InsertOne from './InsertOne';
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,6 +34,7 @@ const Admin = () => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'products', label: 'Products', icon: Package },
+    { id: 'addproduct', label: 'Add Product', icon: Package },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -62,6 +64,13 @@ const Admin = () => {
             <ManageProducts />
           </>
         );
+
+        case 'addproduct': 
+        return(
+          <>
+            <InsertOne />
+          </>
+        )
         case 'customers':
         return (
           <>

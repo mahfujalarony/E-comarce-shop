@@ -29,7 +29,7 @@ const ViewAddress: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.get('http://localhost:3001/api/getaddress', {
+        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/getaddress`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -65,7 +65,7 @@ const ViewAddress: React.FC = () => {
 
     if (window.confirm(`Are you sure you want to delete the address for ${addressToDelete.fullName}?`)) {
       try {
-        await axios.delete(`http://localhost:3001/api/delete/${addressId}`, {
+        await axios.delete(`${import.meta.env.VITE_APP_API_URL}/api/delete/${addressId}`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
