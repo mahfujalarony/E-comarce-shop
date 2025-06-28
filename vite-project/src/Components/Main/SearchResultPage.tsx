@@ -6,7 +6,7 @@ import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import Rating from '../ui/Rating';
 import {  Grid, List,  Search, TrendingUp } from 'lucide-react';
-import { useAuth } from '../auth/AuthContext';
+//import { useAuth } from '../auth/AuthContext';
 import { toast } from 'react-toastify';
 
 interface Product {
@@ -53,7 +53,8 @@ const SearchResultPage: React.FC = () => {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isMobile, setIsMobile] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+   const [showFilters, setShowFilters] = useState(false);
+  console.log(showFilters);
 
   // Detect mobile screen
   useEffect(() => {
@@ -69,18 +70,18 @@ const SearchResultPage: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const { authData } = useAuth?.() || {};
-  let userId = null;
-  if (authData?.userId) {
-    userId = authData.userId;
-  } else {
-    const localUser = localStorage.getItem('user');
-    if (localUser) {
-      try {
-        userId = JSON.parse(localUser).userId;
-      } catch {}
-    }
-  }
+  //const { authData } = useAuth?.() || {};
+  //let userId = null;
+  // if (authData?.userId) {
+  //   userId = authData.userId;
+  // } else {
+  //   const localUser = localStorage.getItem('user');
+  //   if (localUser) {
+  //     try {
+  //       userId = JSON.parse(localUser).userId;
+  //     } catch {}
+  //   }
+  // }
 
   const handleAddToCart = async (product: Product) => {
     try {
