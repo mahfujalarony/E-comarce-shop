@@ -4,7 +4,6 @@ import { MdAccountCircle, MdSearch, MdMenu, MdClose } from "react-icons/md";
 import { useAuth } from '../auth/AuthContext';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import ChatIcon from '@mui/icons-material/Chat';
-//import NotificationsIcon from '@mui/icons-material/Notifications';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -24,7 +23,6 @@ interface ConversationType {
   };
 }
 
-//const menuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 const baseMenuItems = ['Home', 'Contact', 'About', 'Sign Up'] as const;
 
 // Enhanced Styled Autocomplete
@@ -32,22 +30,30 @@ const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
   '& .MuiInputBase-root': {
     borderRadius: '12px',
     border: '2px solid #e5e7eb',
-    padding: '8px 12px',
+    padding: '6px 10px',
     fontSize: '0.875rem',
     background: '#ffffff',
     transition: 'all 0.3s ease',
+    minHeight: '40px',
+    [theme.breakpoints.down('md')]: {
+      fontSize: '0.8rem',
+      padding: '4px 8px',
+      borderRadius: '10px',
+      minHeight: '36px',
+    },
     [theme.breakpoints.down('sm')]: {
       fontSize: '0.75rem',
-      padding: '6px 10px',
-      borderRadius: '10px',
+      padding: '3px 6px',
+      borderRadius: '8px',
+      minHeight: '32px',
     },
     '&:hover': {
       borderColor: '#3b82f6',
-      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
+      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
     },
     '&.Mui-focused': {
       borderColor: '#3b82f6',
-      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
       background: '#ffffff',
     },
   },
@@ -55,6 +61,9 @@ const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
     fontSize: '0.875rem',
     color: '#6b7280',
     fontWeight: '500',
+    [theme.breakpoints.down('md')]: {
+      fontSize: '0.8rem',
+    },
     [theme.breakpoints.down('sm')]: {
       fontSize: '0.75rem',
     },
@@ -71,10 +80,11 @@ const Navbar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string>('Home');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  //const [conversation, setSelectedConversation] = useState<ConversationType | null>(null);
+  const [isTablet, setIsTablet] = useState<boolean>(false);
   const [avatarOpen, setAvatarOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState<boolean>(false);
   const token = localStorage.getItem('token');
   const menuItems = token ? baseMenuItems.filter(item => item !== 'Sign Up') : baseMenuItems;
 
@@ -102,8 +112,16 @@ const Navbar: React.FC = () => {
   }, []);
 
   const handleResize = useCallback(() => {
-    setIsMobile(window.innerWidth < 1024);
-    if (window.innerWidth >= 1024) setSidebarOpen(false);
+    const width = window.innerWidth;
+    setIsMobile(width < 768);
+    setIsTablet(width >= 768 && width < 1024);
+    if (width >= 1024) {
+      setSidebarOpen(false);
+      setMobileSearchOpen(false);
+    }
+    if (width >= 640) {
+      setMobileSearchOpen(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -116,25 +134,23 @@ const Navbar: React.FC = () => {
     document.body.style.overflow = sidebarOpen ? 'hidden' : 'auto';
   }, [sidebarOpen]);
 
-
-    const handleLogout = useCallback((e: React.MouseEvent<HTMLLIElement>) => {
+  const handleLogout = useCallback((e: React.MouseEvent<HTMLLIElement>) => {
     e.stopPropagation();
     setAvatarOpen(false);
     logout();
     navigate('/');
   }, [logout, navigate]);
 
-
   const toggleSidebar = useCallback(() => {
-    if (isMobile) setSidebarOpen((prev) => !prev);
-  }, [isMobile]);
+    if (isMobile || isTablet) setSidebarOpen((prev) => !prev);
+  }, [isMobile, isTablet]);
 
   const handleMenuSelect = useCallback((item: string) => {
     setActiveMenu(item);
-    if (isMobile) setSidebarOpen(false);
+    if (isMobile || isTablet) setSidebarOpen(false);
     const path = item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '')}`;
     navigate(path);
-  }, [isMobile, navigate]);
+  }, [isMobile, isTablet, navigate]);
 
   const toggleAvatar = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -161,9 +177,7 @@ const Navbar: React.FC = () => {
   }, [handleOutsideClick]);
 
   const handleFirstChatLoaded = useCallback((conversation: ConversationType | null) => {
-
     if (conversation) {
-      // setSelectedConversation(conversation); // এই লাইন সরিয়ে দিন
       navigate(`/messages/${conversation.id}`, {
         state: { user: conversation.user, name: conversation.name },
       });
@@ -179,49 +193,53 @@ const Navbar: React.FC = () => {
     };
   }, [handleFirstChatLoaded]);
 
-const handleChatClick = useCallback(() => {
-  if (!token) {
-    toast.info('Please login to access messages');
-    return;
-  }
-  socket.emit('load_first_chat');
-}, [token]);
+  const handleChatClick = useCallback(() => {
+    if (!token) {
+      toast.info('Please login to access messages');
+      return;
+    }
+    socket.emit('load_first_chat');
+  }, [token]);
 
-  // শুধু keyword পাঠানোর জন্য handleSearch ও Autocomplete onChange
   const handleSearch = useCallback(() => {
     if (!searchQuery.trim()) return;
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    setMobileSearchOpen(false);
   }, [navigate, searchQuery]);
 
+  const toggleMobileSearch = useCallback(() => {
+    setMobileSearchOpen((prev) => !prev);
+  }, []);
+
   return (
-    <div className="font-inter ">
+    <div className="font-inter">
       {/* Sticky Navbar with Glass Effect */}
       <header className={`sticky top-0 left-0 w-full z-50 transition-all duration-300 ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
           : 'bg-white shadow-md'
       }`}>
-        <div className="px-4 sm:px-6 md:px-10 xl:px-32 h-20 flex justify-between items-center">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-10 xl:px-32 h-16 sm:h-18 md:h-20 flex justify-between items-center">
           {/* Logo/Menu Button */}
-          <div className="flex items-center space-x-4">
-            {/* Mobile Menu Button */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Mobile/Tablet Menu Button */}
             <button
               type="button"
-              className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 rounded-xl hover:bg-gray-100 transition-colors"
               onClick={toggleSidebar}
               aria-label="Toggle menu"
             >
               {sidebarOpen ? (
-                <MdClose className="text-2xl text-gray-700" />
+                <MdClose className="text-xl sm:text-2xl text-gray-700" />
               ) : (
-                <MdMenu className="text-2xl text-gray-700" />
+                <MdMenu className="text-xl sm:text-2xl text-gray-700" />
               )}
             </button>
 
             {/* Logo */}
             <button
               type="button"
-              className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:scale-105 transition-transform duration-300"
+              className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:scale-105 transition-transform duration-300"
               onClick={() => navigate('/')}
             >
               Exclusive
@@ -230,7 +248,7 @@ const handleChatClick = useCallback(() => {
 
           {/* Desktop Menu */}
           <nav className="hidden lg:flex">
-            <ul className="flex text-base md:text-lg text-gray-600 space-x-8">
+            <ul className="flex text-sm md:text-base lg:text-lg text-gray-600 space-x-4 md:space-x-6 lg:space-x-8">
               {menuItems.map((item) => (
                 <li key={item}>
                   <button
@@ -251,88 +269,120 @@ const handleChatClick = useCallback(() => {
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Search Bar */}
-            <div className="hidden sm:block">
-              <Stack spacing={2} sx={{ width: { sm: 200, md: 280, lg: 320 } }}>
-                  <StyledAutocomplete
-    freeSolo
-    disableClearable
-    options={searchSuggestions.map((option) => option.title)}
-    inputValue={searchQuery}
-    onInputChange={(_, newInputValue, reason) => {
-      if (reason !== 'reset') {
-        setSearchQuery(newInputValue);
-      }
-    }}
-    onChange={(_, value) => {
-      // value string | null হতে পারে, তাই string নিশ্চিত করুন
-      const searchValue = typeof value === 'string' ? value : '';
-      setSearchQuery(searchValue);
-      if (searchValue) {
-        navigate(`/search?q=${encodeURIComponent(searchValue)}`);
-      }
-    }}
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        label="Search products..."
-        size="small"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSearch();
-          }
-        }}
-        InputProps={{
-          ...params.InputProps,
-          endAdornment: (
-            <button
-              onClick={handleSearch}
-              className="p-1 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              <MdSearch className="text-xl text-blue-600" />
-            </button>
-          ),
-        }}
-      />
-    )}
-  />
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
+            {/* Desktop Search Bar */}
+            <div className="hidden md:block">
+              <Stack spacing={2} sx={{ 
+                width: { 
+                  md: 200, 
+                  lg: 260, 
+                  xl: 300 
+                } 
+              }}>
+                <StyledAutocomplete
+                  freeSolo
+                  disableClearable
+                  options={searchSuggestions.map((option) => option.title)}
+                  inputValue={searchQuery}
+                  onInputChange={(_, newInputValue, reason) => {
+                    if (reason !== 'reset') {
+                      setSearchQuery(newInputValue);
+                    }
+                  }}
+                  onChange={(_, value) => {
+                    const searchValue = typeof value === 'string' ? value : '';
+                    setSearchQuery(searchValue);
+                    if (searchValue) {
+                      navigate(`/search?q=${encodeURIComponent(searchValue)}`);
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Search products..."
+                      size="small"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSearch();
+                        }
+                      }}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <button
+                            onClick={handleSearch}
+                            className="p-1 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <MdSearch className="text-base md:text-lg text-blue-600" />
+                          </button>
+                        ),
+                      }}
+                    />
+                  )}
+                />
               </Stack>
+            </div>
+
+            {/* Tablet Search Bar */}
+            <div className="hidden sm:block md:hidden">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch();
+                    }
+                  }}
+                  className="w-32 sm:w-40 px-3 py-2 pl-8 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none transition-colors"
+                />
+                <MdSearch className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                <button
+                  onClick={handleSearch}
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                >
+                  Go
+                </button>
+              </div>
             </div>
 
             {/* Mobile Search Button */}
             <button 
-              className="sm:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              onClick={() => navigate('/search')}
+              className="sm:hidden p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
+              onClick={toggleMobileSearch}
             >
-              <MdSearch className="text-xl text-gray-600" />
+              <MdSearch className="text-lg text-gray-600" />
             </button>
 
             {/* Action Buttons */}
-            <div className="flex items-center space-x-1 sm:space-x-2">
-             
- 
-
-
+            <div className="flex items-center space-x-0.5 sm:space-x-1 md:space-x-2">
               {/* Messages */}
               <button 
                 type="button" 
                 onClick={handleChatClick} 
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative group"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-colors relative group"
                 title="Messages"
               >
-                <ChatIcon className="text-gray-600 group-hover:text-blue-600 transition-colors" fontSize={isMobile ? 'medium' : 'large'} />
+                <ChatIcon 
+                  className="text-gray-600 group-hover:text-blue-600 transition-colors" 
+                  fontSize={isMobile ? 'small' : isTablet ? 'medium' : 'large'} 
+                />
               </button>
 
               {/* Cart */}
               <button 
                 type="button" 
                 onClick={() => navigate('/wishlist')} 
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative group"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-colors relative group"
                 title="Shopping Cart"
               >
-                <ShoppingCartCheckoutIcon className="text-gray-600 group-hover:text-blue-600 transition-colors" fontSize={isMobile ? 'medium' : 'large'} />
+                <ShoppingCartCheckoutIcon 
+                  className="text-gray-600 group-hover:text-blue-600 transition-colors" 
+                  fontSize={isMobile ? 'small' : isTablet ? 'medium' : 'large'} 
+                />
               </button>
             </div>
 
@@ -345,7 +395,7 @@ const handleChatClick = useCallback(() => {
                 aria-label="User menu"
               >
                 {authData?.imgUrl ? (
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all duration-300 shadow-md">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all duration-300 shadow-md">
                     <img 
                       src={authData.imgUrl} 
                       alt="User Avatar" 
@@ -356,23 +406,23 @@ const handleChatClick = useCallback(() => {
                     />
                   </div>
                 ) : (
-                  <MdAccountCircle className="text-4xl sm:text-5xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
+                  <MdAccountCircle className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
                 )}
               </button>
               
               {/* Enhanced Dropdown Menu */}
               {avatarOpen && (
-                <div className="absolute top-14 sm:top-16 right-0 bg-white border border-gray-200 rounded-2xl shadow-2xl w-64 z-50 overflow-hidden">
+                <div className="absolute top-10 sm:top-12 md:top-14 lg:top-16 right-0 bg-white border border-gray-200 rounded-2xl shadow-2xl w-52 sm:w-56 md:w-64 z-50 overflow-hidden">
                   {/* User Info Header */}
                   {authData && (
-                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
-                      <p className="font-semibold text-gray-800 truncate">{authData.name || 'User'}</p>
-                      <p className="text-sm text-gray-600 truncate">{authData.email}</p>
+                    <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
+                      <p className="font-semibold text-xs sm:text-sm md:text-base text-gray-800 truncate">{authData.name || 'User'}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{authData.email}</p>
                     </div>
                   )}
                   
                   {/* Menu Items */}
-                  <div className="py-2">
+                  <div className="py-1 sm:py-2">
                     {[
                       { label: 'Manage My Account', path: '/account', icon: '👤' },
                       { label: 'My Orders', path: '/orders', icon: '📦' },
@@ -384,28 +434,64 @@ const handleChatClick = useCallback(() => {
                     ].map((item, index) => (
                       <li 
                         key={index}
-                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-3 text-gray-700 hover:text-blue-600" 
+                        className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-2 sm:space-x-3 text-gray-700 hover:text-blue-600" 
                         onClick={(e) => handleDropdownItemClick(item.path, e)}
                       >
-                        <span className="text-lg">{item.icon}</span>
-                        <span className="text-sm font-medium">{item.label}</span>
+                        <span className="text-sm sm:text-base">{item.icon}</span>
+                        <span className="text-xs sm:text-sm font-medium">{item.label}</span>
                       </li>
                     ))}
                     
                     {/* Logout */}
-  <li 
-    className="px-4 py-3 hover:bg-red-50 text-red-600 cursor-pointer transition-colors flex items-center space-x-3 border-t border-gray-100 mt-2"
-    onClick={handleLogout}
-  >
-    <span className="text-lg">🚪</span>
-    <span className="text-sm font-medium">Logout</span>
-  </li>
+                    <li 
+                      className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-red-50 text-red-600 cursor-pointer transition-colors flex items-center space-x-2 sm:space-x-3 border-t border-gray-100 mt-1 sm:mt-2"
+                      onClick={handleLogout}
+                    >
+                      <span className="text-sm sm:text-base">🚪</span>
+                      <span className="text-xs sm:text-sm font-medium">Logout</span>
+                    </li>
                   </div>
                 </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* Mobile Search Bar */}
+        {mobileSearchOpen && (
+          <div className="sm:hidden border-t border-gray-200 bg-white px-3 py-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
+                className="w-full px-3 py-2 pl-9 pr-16 border-2 border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none transition-colors"
+                autoFocus
+              />
+              <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-base" />
+              <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex space-x-1">
+                <button
+                  onClick={handleSearch}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Go
+                </button>
+                <button
+                  onClick={toggleMobileSearch}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <MdClose className="text-sm" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Overlay for Mobile */}
@@ -419,45 +505,45 @@ const handleChatClick = useCallback(() => {
 
       {/* Enhanced Mobile Sidebar */}
       <nav
-        className={`fixed top-0 left-0 w-80 h-full bg-white z-50 transition-transform duration-300 ease-in-out transform shadow-2xl ${
+        className={`fixed top-0 left-0 w-72 sm:w-80 h-full bg-white z-50 transition-transform duration-300 ease-in-out transform shadow-2xl ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:hidden`}
         aria-hidden={!sidebarOpen}
       >
         {/* Sidebar Header */}
-        <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Menu</h2>
+            <h2 className="text-xl sm:text-2xl font-bold">Menu</h2>
             <button
               onClick={toggleSidebar}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              <MdClose className="text-2xl" />
+              <MdClose className="text-xl sm:text-2xl" />
             </button>
           </div>
           {authData && (
-            <div className="mt-4 flex items-center space-x-3">
+            <div className="mt-3 sm:mt-4 flex items-center space-x-2 sm:space-x-3">
               {authData.imgUrl ? (
                 <img 
                   src={authData.imgUrl} 
                   alt="User" 
-                  className="w-12 h-12 rounded-full border-2 border-white/30"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-white/30"
                 />
               ) : (
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <MdAccountCircle className="text-2xl" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <MdAccountCircle className="text-xl sm:text-2xl" />
                 </div>
               )}
               <div>
-                <p className="font-semibold">{authData.name || 'User'}</p>
-                <p className="text-sm opacity-80">{authData.email}</p>
+                <p className="font-semibold text-sm sm:text-base">{authData.name || 'User'}</p>
+                <p className="text-xs sm:text-sm opacity-80">{authData.email}</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Mobile Search */}
-        <div className="p-4 border-b border-gray-100">
+        {/* Mobile Search in Sidebar */}
+        <div className="p-3 sm:p-4 border-b border-gray-100">
           <div className="relative">
             <input
               type="text"
@@ -470,15 +556,15 @@ const handleChatClick = useCallback(() => {
                   setSidebarOpen(false);
                 }
               }}
-              className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 pl-10 sm:pl-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm"
             />
-            <MdSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
+            <MdSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg sm:text-xl" />
             <button
               onClick={() => {
                 handleSearch();
                 setSidebarOpen(false);
               }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               Search
             </button>
@@ -486,12 +572,12 @@ const handleChatClick = useCallback(() => {
         </div>
 
         {/* Menu Items */}
-        <ul className="flex flex-col p-4 space-y-2">
+        <ul className="flex flex-col p-3 sm:p-4 space-y-1 sm:space-y-2">
           {menuItems.map((item) => (
             <li key={item}>
               <button
                 type="button"
-                className={`w-full text-left p-4 rounded-xl hover:bg-gray-50 transition-all font-medium ${
+                className={`w-full text-left p-3 sm:p-4 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm sm:text-base ${
                   activeMenu === item 
                     ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' 
                     : 'text-gray-700'
@@ -505,8 +591,8 @@ const handleChatClick = useCallback(() => {
         </ul>
 
         {/* Sidebar Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-gray-50">
-          <p className="text-sm text-gray-600 text-center">
+        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 border-t border-gray-100 bg-gray-50">
+          <p className="text-xs sm:text-sm text-gray-600 text-center">
             © 2024 Exclusive. All rights reserved.
           </p>
         </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const images = ['/figma/xa (2).jpg', '/figma/xa (3).jpg'];
 
@@ -122,9 +124,20 @@ const Body: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [filteredCategories, setFilteredCategories] = useState(categoryData);
+  const [isMobile, setIsMobile] = useState(false);
 
   const navigate = useNavigate();
-  //const isMobile = useMemo(() => window.innerWidth < 1024, []);
+
+  // Detect screen size for responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Search functionality with navigation
   const handleSearch = useCallback((query: string) => {
@@ -187,12 +200,12 @@ const Body: React.FC = () => {
   }, [navigate]);
 
   // Handle main category click (only keyword)
-  const handleMainCategoryClick = useCallback(( categoryLabel: string) => {
+  const handleMainCategoryClick = useCallback((categoryLabel: string) => {
     navigate(`/search?q=${encodeURIComponent(categoryLabel)}`);
   }, [navigate]);
 
   // Handle subcategory click (only keyword)
-  const handleSubCategoryClick = useCallback((  subcategoryLabel: string) => {
+  const handleSubCategoryClick = useCallback((subcategoryLabel: string) => {
     navigate(`/search?q=${encodeURIComponent(subcategoryLabel)}`);
   }, [navigate]);
 
@@ -204,7 +217,7 @@ const Body: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1500); // Reduced loading time
     return () => clearTimeout(timer);
   }, []);
 
@@ -216,52 +229,122 @@ const Body: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const renderSidebarSkeleton = () => (
-    <div className="space-y-4">
-      <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-      <ul className="flex flex-col space-y-2">
-        {[...Array(8)].map((_, i) => (
-          <li key={i} className="p-2">
-            <div className="h-6 bg-gray-200 rounded animate-pulse" style={{width: '80%'}}></div>
-            {i < 3 && (
-              <ul className="pl-4 mt-2 space-y-1">
+  // Enhanced Skeleton Components
+  const SearchBarSkeleton = () => (
+    <div className="relative mb-4 sm:mb-6">
+      <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-3 sm:px-4 py-2 sm:py-3 shadow-sm">
+        <Skeleton circle width={20} height={20} className="mr-2 sm:mr-3" />
+        <Skeleton height={20} className="flex-1" />
+        <Skeleton width={60} height={28} className="rounded ml-2" />
+      </div>
+    </div>
+  );
+
+  const CategoryItemSkeleton = ({ hasSubcategories = false }) => (
+    <div className="bg-white rounded-lg border border-gray-100 shadow-sm mb-1 sm:mb-2">
+      <div className="flex items-center justify-between w-full p-3 sm:p-4">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+          <Skeleton circle width={32} height={32} className="flex-shrink-0" />
+          <Skeleton height={16} width="70%" />
+        </div>
+        <Skeleton circle width={20} height={20} />
+      </div>
+      
+      {hasSubcategories && (
+        <div className="ml-4 sm:ml-6 pb-3 sm:pb-4 space-y-1 sm:space-y-2">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="border-l-2 border-gray-100 pl-3 sm:pl-4">
+              <div className="flex items-center justify-between w-full p-2 sm:p-3">
+                <Skeleton height={14} width="60%" />
+                <Skeleton circle width={16} height={16} />
+              </div>
+              <div className="ml-2 sm:ml-4 mt-1 sm:mt-2 space-y-1">
                 {[...Array(3)].map((_, j) => (
-                  <li key={j}>
-                    <div className="h-5 bg-gray-200 rounded animate-pulse" style={{width: '60%'}}></div>
-                  </li>
+                  <Skeleton key={j} height={12} width="80%" />
                 ))}
-              </ul>
-            )}
-          </li>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const SidebarSkeleton = () => (
+    <div className="space-y-1 sm:space-y-2">
+      <SearchBarSkeleton />
+      
+      <div className="space-y-1 sm:space-y-2 max-h-[60vh] lg:max-h-none">
+        {[...Array(6)].map((_, i) => (
+          <CategoryItemSkeleton 
+            key={i} 
+            hasSubcategories={i < 3} // First 3 items have subcategories in skeleton
+          />
         ))}
-      </ul>
+      </div>
+    </div>
+  );
+
+  const ImageSliderSkeleton = () => (
+    <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl sm:rounded-2xl">
+      <Skeleton height="100%" className="absolute inset-0" />
+      
+      {/* Skeleton for indicators */}
+      <div className="absolute bottom-3 sm:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3 z-30">
+        {[...Array(2)].map((_, index) => (
+          <Skeleton
+            key={index}
+            circle
+            width={12}
+            height={12}
+            className="sm:w-3 sm:h-3"
+          />
+        ))}
+      </div>
+
+      {/* Skeleton for navigation arrows */}
+      <Skeleton
+        circle
+        width={32}
+        height={32}
+        className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 sm:w-10 sm:h-10"
+      />
+      <Skeleton
+        circle
+        width={32}
+        height={32}
+        className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 sm:w-10 sm:h-10"
+      />
     </div>
   );
 
   if (isLoading) {
     return (
-      <div className="px-4 sm:px-10 xl:px-32 font-inter">
-        <div className="flex flex-col-reverse lg:flex-row w-full mt-8 gap-4">
-          <aside className="w-full lg:w-1/3 p-4" aria-label="Categories">
-            {renderSidebarSkeleton()}
+      <div className="px-3 sm:px-6 md:px-8 lg:px-10 xl:px-32 font-inter">
+        <div className="flex flex-col lg:flex-row w-full mt-4 sm:mt-6 lg:mt-8 gap-3 sm:gap-4">
+          {/* Sidebar Skeleton */}
+          <aside className="w-full lg:w-1/3 order-2 lg:order-1 p-3 sm:p-4" aria-label="Categories">
+            <SidebarSkeleton />
           </aside>
-            <div className="relative w-full h-[400px]">
-              <div className="w-full h-full bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
+
+          {/* Image Slider Skeleton */}
+          <div className="w-full lg:w-2/3 order-1 lg:order-2">
+            <ImageSliderSkeleton />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="px-4 sm:px-10 xl:px-32 font-inter">
-      <div className="flex flex-col-reverse lg:flex-row w-full mt-8 gap-4">
+    <div className="px-3 sm:px-6 md:px-8 lg:px-10 xl:px-32 font-inter">
+      <div className="flex flex-col lg:flex-row w-full mt-4 sm:mt-6 lg:mt-8 gap-3 sm:gap-4">
         {/* Enhanced Sidebar Categories */}
-        <aside className="w-full lg:w-1/3 p-4" aria-label="Categories">
+        <aside className="w-full lg:w-1/3 order-2 lg:order-1 p-3 sm:p-4" aria-label="Categories">
           {/* Enhanced Search Bar */}
-          <div className="relative mb-6">
-            <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-4 py-3 shadow-sm hover:border-blue-300 focus-within:border-blue-500 focus-within:shadow-md transition-all duration-300">
-              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative mb-4 sm:mb-6">
+            <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-3 sm:px-4 py-2 sm:py-3 shadow-sm hover:border-blue-300 focus-within:border-blue-500 focus-within:shadow-md transition-all duration-300">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -270,47 +353,47 @@ const Body: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
-                className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500 font-medium"
+                className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500 font-medium min-w-0"
               />
               {searchQuery && (
                 <button
                   onClick={clearSearch}
-                  className="text-gray-400 hover:text-gray-600 ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
                   title="Clear search"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               )}
               <button
                 onClick={() => navigateToSearch(searchQuery)}
-                className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 disabled={!searchQuery.trim()}
                 title="Search"
               >
-                Go
+                {isMobile ? 'Go' : 'Search'}
               </button>
             </div>
           </div>
 
           {/* Categories List */}
-          <div className="space-y-2">
+          <div className="space-y-1 sm:space-y-2 max-h-[60vh] lg:max-h-none overflow-y-auto lg:overflow-visible">
             {Object.entries(filteredCategories).map(([categoryKey, category]) => (
               <div key={categoryKey} className="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <button
                   type="button"
-                  className="flex items-center justify-between w-full p-4 hover:bg-gray-50 rounded-lg transition-colors duration-200 group"
+                  className="flex items-center justify-between w-full p-3 sm:p-4 hover:bg-gray-50 rounded-lg transition-colors duration-200 group"
                   onClick={() => toggleMenu(categoryKey)}
                   onDoubleClick={() => handleMainCategoryClick(categoryKey)}
                   aria-expanded={openMenu === categoryKey}
                   title={`Click to expand, double-click to search ${category.label}`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl group-hover:scale-110 transition-transform duration-200">{category.icon}</span>
-                    <span className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">{category.label}</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                    <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-200 flex-shrink-0">{category.icon}</span>
+                    <span className="font-semibold text-sm sm:text-base text-gray-800 group-hover:text-blue-600 transition-colors truncate">{category.label}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -319,12 +402,12 @@ const Body: React.FC = () => {
                       className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                       title="Search this category"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </button>
                     <svg 
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-200 ${
                         openMenu === categoryKey ? 'rotate-90' : ''
                       }`}
                       fill="none" 
@@ -337,18 +420,18 @@ const Body: React.FC = () => {
                 </button>
                 
                 {openMenu === categoryKey && (
-                  <div className="ml-6 pb-4 space-y-2">
+                  <div className="ml-4 sm:ml-6 pb-3 sm:pb-4 space-y-1 sm:space-y-2">
                     {Object.entries(category.subcategories).map(([subKey, subcategory]) => (
-                      <div key={subKey} className="border-l-2 border-gray-100 pl-4">
+                      <div key={subKey} className="border-l-2 border-gray-100 pl-3 sm:pl-4">
                         <button
                           type="button"
-                          className="flex items-center justify-between w-full p-3 hover:bg-blue-50 rounded-lg transition-colors duration-200 group"
+                          className="flex items-center justify-between w-full p-2 sm:p-3 hover:bg-blue-50 rounded-lg transition-colors duration-200 group"
                           onClick={() => toggleSubMenu(`${categoryKey}-${subKey}`)}
                           onDoubleClick={() => handleSubCategoryClick(categoryKey)}
                           title={`Click to expand, double-click to search ${subcategory.label}`}
                         >
-                          <span className="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">{subcategory.label}</span>
-                          <div className="flex items-center space-x-2">
+                          <span className="font-medium text-xs sm:text-sm text-gray-700 group-hover:text-blue-600 transition-colors truncate">{subcategory.label}</span>
+                          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -357,12 +440,12 @@ const Body: React.FC = () => {
                               className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                               title="Search this subcategory"
                             >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
                             </button>
                             <svg 
-                              className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                              className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ${
                                 openSubMenu === `${categoryKey}-${subKey}` ? 'rotate-90' : ''
                               }`}
                               fill="none" 
@@ -375,12 +458,12 @@ const Body: React.FC = () => {
                         </button>
                         
                         {openSubMenu === `${categoryKey}-${subKey}` && (
-                          <ul className="ml-4 mt-2 space-y-1">
+                          <ul className="ml-2 sm:ml-4 mt-1 sm:mt-2 space-y-1">
                             {subcategory.items.map((item) => (
                               <li key={item.id}>
                                 <button
                                   type="button"
-                                  className={`w-full text-left p-3 text-sm rounded-lg transition-all duration-200 group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 ${
+                                  className={`w-full text-left p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 ${
                                     selectedCategory === item.id
                                       ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 font-semibold border border-blue-200'
                                       : 'text-gray-600 hover:text-gray-800 border border-transparent'
@@ -389,8 +472,8 @@ const Body: React.FC = () => {
                                   title={`Search for ${item.label}`}
                                 >
                                   <div className="flex items-center justify-between">
-                                    <span className="group-hover:font-medium transition-all">{item.label}</span>
-                                    <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <span className="group-hover:font-medium transition-all truncate pr-2">{item.label}</span>
+                                    <svg className="w-2 h-2 sm:w-3 sm:h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                     </svg>
                                   </div>
@@ -409,22 +492,22 @@ const Body: React.FC = () => {
 
           {/* No results message */}
           {searchQuery && Object.keys(filteredCategories).length === 0 && (
-            <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-              <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-6 sm:py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+              <svg className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-300 mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 1H9v6h6V1z" />
               </svg>
-              <p className="font-medium mb-2">No categories found for "{searchQuery}"</p>
-              <div className="space-x-2">
+              <p className="font-medium mb-2 text-sm sm:text-base">No categories found for "{searchQuery}"</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2">
                 <button
                   onClick={clearSearch}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                  className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium hover:underline"
                 >
                   Clear search
                 </button>
-                <span className="text-gray-300">•</span>
+                <span className="text-gray-300 hidden sm:inline">•</span>
                 <button
                   onClick={() => navigateToSearch(searchQuery)}
-                  className="text-green-600 hover:text-green-800 text-sm font-medium hover:underline"
+                  className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium hover:underline"
                 >
                   Search products instead
                 </button>
@@ -434,76 +517,78 @@ const Body: React.FC = () => {
         </aside>
 
         {/* Enhanced Image Slider */}
-        <div className="relative w-full h-[400px] overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 group">
-          {images.map((img, index) => (
-            <img
-              key={img}
-              src={img}
-              alt={`Slide ${index + 1}`}
-              className={`absolute top-0 left-0 w-full h-full object-cover transition-all duration-700 ease-in-out ${
-                currentIndex === index ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 scale-105'
-              }`}
-              loading={index === 0 ? 'eager' : 'lazy'}
-            />
-          ))}
-          
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-20"></div>
-          
-          {/* Slider indicators */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-30">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
-                  currentIndex === index 
-                    ? 'bg-white shadow-lg ring-2 ring-white/50' 
-                    : 'bg-white/60 hover:bg-white/80'
+        <div className="w-full lg:w-2/3 order-1 lg:order-2">
+          <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 group">
+            {images.map((img, index) => (
+              <img
+                key={img}
+                src={img}
+                alt={`Slide ${index + 1}`}
+                className={`absolute top-0 left-0 w-full h-full object-cover transition-all duration-700 ease-in-out ${
+                  currentIndex === index ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 scale-105'
                 }`}
-                onClick={() => setCurrentIndex(index)}
-                aria-label={`Go to slide ${index + 1}`}
+                loading={index === 0 ? 'eager' : 'lazy'}
               />
             ))}
-          </div>
+            
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-20"></div>
+            
+            {/* Slider indicators */}
+            <div className="absolute bottom-3 sm:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3 z-30">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 hover:scale-125 ${
+                    currentIndex === index 
+                      ? 'bg-white shadow-lg ring-2 ring-white/50' 
+                      : 'bg-white/60 hover:bg-white/80'
+                  }`}
+                  onClick={() => setCurrentIndex(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
 
-          {/* Navigation arrows */}
-          <button
-            onClick={() => setCurrentIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
-            aria-label="Previous slide"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setCurrentIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
-            aria-label="Next slide"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            {/* Navigation arrows */}
+            <button
+              onClick={() => setCurrentIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
+              className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-1 sm:p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
+              aria-label="Previous slide"
+            >
+              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrentIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
+              className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-1 sm:p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
+              aria-label="Next slide"
+            >
+              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       
       {/* Selected Category Display */}
       {selectedCategory && (
-        <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className="mt-4 sm:mt-6 lg:mt-8 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl sm:rounded-2xl border border-blue-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div>
-              <p className="text-blue-800 font-semibold text-lg">
+              <p className="text-blue-800 font-semibold text-sm sm:text-lg">
                 🎯 Selected Category: <span className="text-blue-600">{selectedCategory}</span>
               </p>
-              <p className="text-blue-600 text-sm mt-1">Click any category to search for products</p>
+              <p className="text-blue-600 text-xs sm:text-sm mt-1">Click any category to search for products</p>
             </div>
             <button
               onClick={() => setSelectedCategory('')}
-              className="text-blue-400 hover:text-blue-600 p-2 hover:bg-blue-100 rounded-full transition-colors"
+              className="text-blue-400 hover:text-blue-600 p-2 hover:bg-blue-100 rounded-full transition-colors self-start sm:self-auto"
               title="Clear selection"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
