@@ -6,7 +6,6 @@ import { useAuth } from '../auth/AuthContext';
 import {
   FaShoppingBag,
   FaFileAlt,
-  FaEdit,
   FaLock,
   FaMapMarkerAlt,
   FaHeart,
