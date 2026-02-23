@@ -4,7 +4,7 @@ A modern, fully responsive e-commerce platform built with cutting-edge technolog
 
 ## 🚀 Live Demo & Resources
 
-- **🌐 Live Website:** [https://rony-bg-az.netlify.app/]
+- **🌐 Live Website:** [https://rony-bg-az-r.netlify.app/]
 - **📹 Demo Video:** [https://drive.google.com/file/d/15aOM_XuskUQQLnfqfeZ6ngj-ZXKsIxkf/view?usp=sharing]
 
 
@@ -168,4 +168,5 @@ To access admin panel:
 
 **Admin Access Code:** `LIB8jz98YQRt128W` (Remember to change this in production)
 
+***Bakcend url: https://github.com/mahfujalarony/project-backend-for-azare
 **Made with ❤️ for the community**
