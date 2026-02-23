@@ -10,7 +10,9 @@ const {
   resetPassword,
   isAdminCkk,
   checkTokenValidAndResetLocalStorage,
-  changePassword
+  changePassword,
+  getMyProfile,
+  updateMyProfile
 } = require("../controllers/authController");
 
 const { protect, isAdmin } = require("../auth/authMiddleware");
@@ -34,6 +36,8 @@ router.post("/reset-password", resetPassword);
 
 //Change Password Route
 router.post("/change-password", protect, changePassword); 
+router.get("/me", protect, getMyProfile);
+router.patch("/me", protect, updateMyProfile);
 
 
 // Role Ckk Router

@@ -51,7 +51,10 @@ interface UserProfileData {
 }
 
 const fetchUserProfile = async (userId: string): Promise<UserProfileData> => {
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_APP_API_URL || import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    throw new Error('API base URL is not configured');
+  }
   const response = await axios.get(`${apiUrl}/api/userProfile/${userId}`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`

@@ -46,6 +46,7 @@ const Login: React.FC = () => {
           isAuthenticated: true,
           name: response.data.user.name,
           imgUrl: response.data.user.imgUrl,
+          token: response.data.token,
           role: response.data.user.role,
         });
         navigate("/");
@@ -82,6 +83,7 @@ const Login: React.FC = () => {
         isAuthenticated: true,
         name: user.displayName,
         imgUrl: user.photoURL,
+        token: res.data.token,
         role: res.data.user.role,
       });
       setSuccessMessage("Login Successful with Google!");

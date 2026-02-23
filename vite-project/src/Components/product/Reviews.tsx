@@ -10,7 +10,7 @@ interface ReviewType {
   _id: string;
   rating: number;
   review: string;
-  userId: { _id: string; name: string; imgUrl?: string };
+  userId: { _id: string; name: string; imgUrl?: string } | null;
   productId: string;
   user: string;
   likes: number;
@@ -231,22 +231,29 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
         ) : reviews.length === 0 ? (
           <p className="text-center text-gray-600">No reviews yet. Be the first to review!</p>
         ) : (
-          reviews.map((rev) => (
+          reviews.map((rev) => {
+            const reviewerId = rev.userId?._id;
+            const reviewerName = rev.userId?.name || rev.user || "Unknown User";
+            const reviewerImg = rev.userId?.imgUrl || "https://placehold.co/50x50";
+
+            return (
             <div
               key={rev._id}
               className="hover:bg-gray-100 bg-white shadow-md rounded-lg p-6 flex flex-col sm:flex-row gap-4 border-b"
-              onClick={() => navigate(`/messages/viewprofile/${rev.userId._id}`)} // Navigate to user profile
+              onClick={() => {
+                if (reviewerId) navigate(`/messages/viewprofile/${reviewerId}`);
+              }}
             >
               <div className="flex-shrink-0">
                 <img
-                  src={rev.userId.imgUrl || "https://placehold.co/50x50"} // Fallback URL
-                  alt={rev.userId.name}
+                  src={reviewerImg}
+                  alt={reviewerName}
                   className="w-12 h-12 rounded-full object-cover"
                   onError={(e) => (e.currentTarget.src = "https://placehold.co/50x50")}
                 />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600 font-semibold">{rev.userId.name}</p>
+                <p className="text-sm text-gray-600 font-semibold">{reviewerName}</p>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
                     <FaStar
@@ -258,7 +265,10 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
                 <p className="text-gray-800">{rev.review}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <button
-                    onClick={() => handleLike(rev._id, rev.likedBy.includes(currentUserId))}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLike(rev._id, rev.likedBy.includes(currentUserId));
+                    }}
                     className={`flex items-center gap-1 text-sm ${
                       rev.likedBy.includes(currentUserId) ? "text-blue-600" : "text-gray-600"
                     } hover:text-blue-700`}
@@ -270,7 +280,7 @@ const Reviews: React.FC<Props> = ({ productId, currentUserId, currentUserName })
                 </div>
               </div>
             </div>
-          ))
+          )})
         )}
 
         {hasMore && (

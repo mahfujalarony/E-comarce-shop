@@ -3,6 +3,7 @@ import ChatList from './ChatList';
 import ChatBox from './ChatBox';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageCircle, LogIn, UserPlus, Lock } from 'lucide-react';
+import { useAuth } from '../auth/AuthContext';
 
 interface ConversationType {
   id: string;
@@ -18,27 +19,11 @@ interface ConversationType {
 
 const Message: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const { chatId } = useParams<{ chatId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Check for token on component mount and listen for changes
-  useEffect(() => {
-    const checkToken = () => {
-      const storedToken = localStorage.getItem('token');
-      setToken(storedToken);
-    };
-
-    checkToken();
-    
-    // Listen for storage changes (in case user logs in/out in another tab)
-    window.addEventListener('storage', checkToken);
-    
-    return () => {
-      window.removeEventListener('storage', checkToken);
-    };
-  }, []);
+  const { authData } = useAuth();
+  const token = authData.token || localStorage.getItem('token');
 
   useEffect(() => {
     if (chatId && location.state?.user) {

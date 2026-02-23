@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { GoArrowRight } from 'react-icons/go';
-import { useInfiniteQuery, QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Rating from '../ui/Rating';
@@ -18,8 +18,6 @@ interface Product {
   stars?: number;
   reviews?: number;
 }
-
-const queryClient = new QueryClient();
 
 const API_URL = `${import.meta.env.VITE_APP_API_URL}/api/products`;
 
@@ -398,10 +396,6 @@ const BestSellingComponent: React.FC = () => {
   );
 };
 
-const BestSelling = () => (
-  <QueryClientProvider client={queryClient}>
-    <BestSellingComponent />
-  </QueryClientProvider>
-);
+const BestSelling = () => <BestSellingComponent />;
 
 export default BestSelling;

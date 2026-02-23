@@ -14,7 +14,7 @@ const messageSocket = (io) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'yourSecretKey');
       socket.user = decoded;
     //  console.log('User authenticated:', socket.user);
       next();

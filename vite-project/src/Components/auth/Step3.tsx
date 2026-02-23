@@ -103,7 +103,10 @@ const Step3: React.FC = () => {
         setAuthData({
           ...authData,
           isAuthenticated: true,
+          userId: response.data.user._id ?? null,
           email: newEmail,
+          token: response.data.token ?? null,
+          role: response.data.user.role ?? null,
           name: response.data.user.name ?? "", // null ফলব্যাক
           imgUrl: response.data.user.imgUrl ?? "", // null ফলব্যাক
         });

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccountCircle, MdSearch, MdMenu, MdClose } from "react-icons/md";
+import { HiOutlineChatBubbleLeftRight, HiOutlineShoppingBag } from "react-icons/hi2";
+import { FiUser, FiPackage, FiHeart, FiCreditCard, FiRotateCcw, FiGift, FiHelpCircle, FiLogOut } from "react-icons/fi";
 import { useAuth } from '../auth/AuthContext';
-import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
-import ChatIcon from '@mui/icons-material/Chat';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Autocomplete from '@mui/material/Autocomplete';
 import { styled } from '@mui/material/styles';
-import socket from '../../socket';
+import socket, { syncSocketAuthToken } from '../../socket';
 import { toast } from 'react-toastify';
 
 interface ConversationType {
@@ -198,6 +198,7 @@ const Navbar: React.FC = () => {
       toast.info('Please login to access messages');
       return;
     }
+    syncSocketAuthToken(token);
     socket.emit('load_first_chat');
   }, [token]);
 
@@ -216,30 +217,30 @@ const Navbar: React.FC = () => {
       {/* Sticky Navbar with Glass Effect */}
       <header className={`sticky top-0 left-0 w-full z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
-          : 'bg-white shadow-md'
+          ? 'bg-white/92 backdrop-blur-md shadow-md border-b border-gray-100' 
+          : 'bg-white/95 shadow-sm border-b border-gray-100'
       }`}>
-        <div className="px-3 sm:px-4 md:px-6 lg:px-10 xl:px-32 h-16 sm:h-18 md:h-20 flex justify-between items-center">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8 xl:px-20 h-14 sm:h-16 flex justify-between items-center gap-2">
           {/* Logo/Menu Button */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Mobile/Tablet Menu Button */}
             <button
               type="button"
-              className="lg:hidden p-1.5 sm:p-2 rounded-xl hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               onClick={toggleSidebar}
               aria-label="Toggle menu"
             >
               {sidebarOpen ? (
-                <MdClose className="text-xl sm:text-2xl text-gray-700" />
+                <MdClose className="text-xl text-gray-700" />
               ) : (
-                <MdMenu className="text-xl sm:text-2xl text-gray-700" />
+                <MdMenu className="text-xl text-gray-700" />
               )}
             </button>
 
             {/* Logo */}
             <button
               type="button"
-              className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:scale-105 transition-transform duration-300"
+              className="font-bold text-base sm:text-lg md:text-xl lg:text-2xl tracking-tight bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent cursor-pointer hover:scale-[1.02] transition-transform duration-200"
               onClick={() => navigate('/')}
             >
               Exclusive
@@ -248,18 +249,18 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Menu */}
           <nav className="hidden lg:flex">
-            <ul className="flex text-sm md:text-base lg:text-lg text-gray-600 space-x-4 md:space-x-6 lg:space-x-8">
+            <ul className="flex text-sm md:text-sm lg:text-base text-gray-600 space-x-3 md:space-x-4 lg:space-x-5">
               {menuItems.map((item) => (
                 <li key={item}>
                   <button
                     type="button"
                     onClick={() => handleMenuSelect(item)}
-                    className={`relative pb-2 px-2 transition-all duration-300 hover:text-blue-600 group ${
+                    className={`relative py-1 px-2 transition-all duration-200 hover:text-blue-600 group ${
                       activeMenu === item ? 'text-blue-600 font-semibold' : ''
                     }`}
                   >
                     {item}
-                    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300 ${
+                    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-200 ${
                       activeMenu === item ? 'opacity-100 scale-100' : 'opacity-0 scale-0 group-hover:opacity-50 group-hover:scale-100'
                     }`} />
                   </button>
@@ -269,14 +270,14 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
             {/* Desktop Search Bar */}
             <div className="hidden md:block">
               <Stack spacing={2} sx={{ 
                 width: { 
-                  md: 200, 
-                  lg: 260, 
-                  xl: 300 
+                  md: 180, 
+                  lg: 220, 
+                  xl: 250 
                 } 
               }}>
                 <StyledAutocomplete
@@ -363,26 +364,20 @@ const Navbar: React.FC = () => {
               <button 
                 type="button" 
                 onClick={handleChatClick} 
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-colors relative group"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors relative group"
                 title="Messages"
               >
-                <ChatIcon 
-                  className="text-gray-600 group-hover:text-blue-600 transition-colors" 
-                  fontSize={isMobile ? 'small' : isTablet ? 'medium' : 'large'} 
-                />
+                <HiOutlineChatBubbleLeftRight className="text-[18px] sm:text-[20px] text-gray-600 group-hover:text-blue-600 transition-colors" />
               </button>
 
               {/* Cart */}
               <button 
                 type="button" 
                 onClick={() => navigate('/wishlist')} 
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-colors relative group"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors relative group"
                 title="Shopping Cart"
               >
-                <ShoppingCartCheckoutIcon 
-                  className="text-gray-600 group-hover:text-blue-600 transition-colors" 
-                  fontSize={isMobile ? 'small' : isTablet ? 'medium' : 'large'} 
-                />
+                <HiOutlineShoppingBag className="text-[18px] sm:text-[20px] text-gray-600 group-hover:text-blue-600 transition-colors" />
               </button>
             </div>
 
@@ -395,7 +390,7 @@ const Navbar: React.FC = () => {
                 aria-label="User menu"
               >
                 {authData?.imgUrl ? (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all duration-300 shadow-md">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-gray-200 hover:border-blue-500 transition-all duration-200 shadow-sm">
                     <img 
                       src={authData.imgUrl} 
                       alt="User Avatar" 
@@ -406,13 +401,13 @@ const Navbar: React.FC = () => {
                     />
                   </div>
                 ) : (
-                  <MdAccountCircle className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
+                  <MdAccountCircle className="text-2xl sm:text-3xl md:text-4xl cursor-pointer text-gray-400 hover:text-blue-600 transition-colors" />
                 )}
               </button>
               
               {/* Enhanced Dropdown Menu */}
               {avatarOpen && (
-                <div className="absolute top-10 sm:top-12 md:top-14 lg:top-16 right-0 bg-white border border-gray-200 rounded-2xl shadow-2xl w-52 sm:w-56 md:w-64 z-50 overflow-hidden">
+                <div className="absolute top-10 sm:top-11 md:top-12 right-0 bg-white border border-gray-200 rounded-xl shadow-xl w-56 sm:w-60 z-50 overflow-hidden">
                   {/* User Info Header */}
                   {authData && (
                     <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
@@ -424,30 +419,30 @@ const Navbar: React.FC = () => {
                   {/* Menu Items */}
                   <div className="py-1 sm:py-2">
                     {[
-                      { label: 'Manage My Account', path: '/account', icon: '👤' },
-                      { label: 'My Orders', path: '/orders', icon: '📦' },
-                      { label: 'My Wishlist', path: '/wishlist', icon: '❤️' },
-                      { label: 'Payment Methods', path: '/payment-methods', icon: '💳' },
-                      { label: 'Order Returns & Refunds', path: '/returns', icon: '↩️' },
-                      { label: 'Refer a Friend', path: '/refer', icon: '🎁' },
-                      { label: 'Help / Support Center', path: '/support', icon: '❓' },
+                      { label: 'Manage My Account', path: '/account', icon: <FiUser /> },
+                      { label: 'My Orders', path: '/orders', icon: <FiPackage /> },
+                      { label: 'My Wishlist', path: '/wishlist', icon: <FiHeart /> },
+                      { label: 'Payment Methods', path: '/payment-methods', icon: <FiCreditCard /> },
+                      { label: 'Order Returns & Refunds', path: '/returns', icon: <FiRotateCcw /> },
+                      { label: 'Refer a Friend', path: '/refer', icon: <FiGift /> },
+                      { label: 'Help / Support Center', path: '/support', icon: <FiHelpCircle /> },
                     ].map((item, index) => (
                       <li 
                         key={index}
-                        className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-2 sm:space-x-3 text-gray-700 hover:text-blue-600" 
+                        className="px-3 sm:px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-2.5 text-gray-700 hover:text-blue-600" 
                         onClick={(e) => handleDropdownItemClick(item.path, e)}
                       >
-                        <span className="text-sm sm:text-base">{item.icon}</span>
+                        <span className="text-sm">{item.icon}</span>
                         <span className="text-xs sm:text-sm font-medium">{item.label}</span>
                       </li>
                     ))}
                     
                     {/* Logout */}
                     <li 
-                      className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-red-50 text-red-600 cursor-pointer transition-colors flex items-center space-x-2 sm:space-x-3 border-t border-gray-100 mt-1 sm:mt-2"
+                      className="px-3 sm:px-4 py-2.5 hover:bg-red-50 text-red-600 cursor-pointer transition-colors flex items-center space-x-2.5 border-t border-gray-100 mt-1"
                       onClick={handleLogout}
                     >
-                      <span className="text-sm sm:text-base">🚪</span>
+                      <span className="text-sm"><FiLogOut /></span>
                       <span className="text-xs sm:text-sm font-medium">Logout</span>
                     </li>
                   </div>

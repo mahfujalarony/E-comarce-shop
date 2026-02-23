@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { GoArrowRight } from 'react-icons/go';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useInfiniteQuery, QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import Rating from '../ui/Rating';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
@@ -24,8 +24,6 @@ interface Product {
   createdAt: string;
   updatedAt: string;
 }
-
-const queryClient = new QueryClient();
 
 const fetchProducts = async ({ pageParam = 0 }) => {
   const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/products?limit=20&offset=${pageParam}`);
@@ -446,10 +444,6 @@ const ProductList: React.FC = () => {
   );
 };
 
-const Fetch = () => (
-  <QueryClientProvider client={queryClient}>
-    <ProductList />
-  </QueryClientProvider>
-);
+const Fetch = () => <ProductList />;
 
 export default Fetch;

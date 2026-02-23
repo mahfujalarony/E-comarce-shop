@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { FiSearch, FiX, FiChevronRight, FiExternalLink, FiChevronLeft } from 'react-icons/fi';
 
 const images = ['/figma/xa (2).jpg', '/figma/xa (3).jpg'];
 
@@ -217,7 +218,7 @@ const Body: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500); // Reduced loading time
+    }, 120);
     return () => clearTimeout(timer);
   }, []);
 
@@ -286,7 +287,7 @@ const Body: React.FC = () => {
   );
 
   const ImageSliderSkeleton = () => (
-    <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl sm:rounded-2xl">
+    <div className="relative w-full h-[220px] sm:h-[260px] md:h-[310px] lg:h-[340px] overflow-hidden rounded-xl sm:rounded-2xl">
       <Skeleton height="100%" className="absolute inset-0" />
       
       {/* Skeleton for indicators */}
@@ -320,15 +321,15 @@ const Body: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="px-3 sm:px-6 md:px-8 lg:px-10 xl:px-32 font-inter">
-        <div className="flex flex-col lg:flex-row w-full mt-4 sm:mt-6 lg:mt-8 gap-3 sm:gap-4">
+      <div className="px-3 sm:px-5 md:px-6 lg:px-8 xl:px-16 font-inter">
+        <div className="flex flex-col lg:flex-row w-full mt-3 sm:mt-4 lg:mt-5 gap-3">
           {/* Sidebar Skeleton */}
-          <aside className="w-full lg:w-1/3 order-2 lg:order-1 p-3 sm:p-4" aria-label="Categories">
+          <aside className="w-full lg:w-[340px] lg:flex-shrink-0 order-2 lg:order-1 p-2 sm:p-3" aria-label="Categories">
             <SidebarSkeleton />
           </aside>
 
           {/* Image Slider Skeleton */}
-          <div className="w-full lg:w-2/3 order-1 lg:order-2">
+          <div className="w-full flex-1 order-1 lg:order-2">
             <ImageSliderSkeleton />
           </div>
         </div>
@@ -337,16 +338,14 @@ const Body: React.FC = () => {
   }
 
   return (
-    <div className="px-3 sm:px-6 md:px-8 lg:px-10 xl:px-32 font-inter">
-      <div className="flex flex-col lg:flex-row w-full mt-4 sm:mt-6 lg:mt-8 gap-3 sm:gap-4">
+    <div className="px-3 sm:px-5 md:px-6 lg:px-8 xl:px-16 font-inter">
+      <div className="flex flex-col lg:flex-row w-full mt-3 sm:mt-4 lg:mt-5 gap-3">
         {/* Enhanced Sidebar Categories */}
-        <aside className="w-full lg:w-1/3 order-2 lg:order-1 p-3 sm:p-4" aria-label="Categories">
+        <aside className="w-full lg:w-[340px] lg:flex-shrink-0 order-2 lg:order-1 p-2 sm:p-3" aria-label="Categories">
           {/* Enhanced Search Bar */}
           <div className="relative mb-4 sm:mb-6">
-            <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-3 sm:px-4 py-2 sm:py-3 shadow-sm hover:border-blue-300 focus-within:border-blue-500 focus-within:shadow-md transition-all duration-300">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+            <div className="flex items-center bg-white rounded-xl border border-gray-200 px-3 py-2 shadow-sm hover:border-blue-300 focus-within:border-blue-500 focus-within:shadow-md transition-all duration-200">
+              <FiSearch className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search categories..."
@@ -358,17 +357,15 @@ const Body: React.FC = () => {
               {searchQuery && (
                 <button
                   onClick={clearSearch}
-                  className="text-gray-400 hover:text-gray-600 ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                  className="text-gray-400 hover:text-gray-600 ml-1 p-1 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
                   title="Clear search"
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <FiX className="w-4 h-4" />
                 </button>
               )}
               <button
                 onClick={() => navigateToSearch(searchQuery)}
-                className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 disabled={!searchQuery.trim()}
                 title="Search"
               >
@@ -383,39 +380,41 @@ const Body: React.FC = () => {
               <div key={categoryKey} className="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <button
                   type="button"
-                  className="flex items-center justify-between w-full p-3 sm:p-4 hover:bg-gray-50 rounded-lg transition-colors duration-200 group"
+                  className="flex items-center justify-between w-full p-2.5 sm:p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 group"
                   onClick={() => toggleMenu(categoryKey)}
                   onDoubleClick={() => handleMainCategoryClick(categoryKey)}
                   aria-expanded={openMenu === categoryKey}
                   title={`Click to expand, double-click to search ${category.label}`}
                 >
                   <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                    <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-200 flex-shrink-0">{category.icon}</span>
-                    <span className="font-semibold text-sm sm:text-base text-gray-800 group-hover:text-blue-600 transition-colors truncate">{category.label}</span>
+                    <span className="text-lg sm:text-xl group-hover:scale-105 transition-transform duration-200 flex-shrink-0">{category.icon}</span>
+                    <span className="font-semibold text-sm text-gray-800 group-hover:text-blue-600 transition-colors truncate">{category.label}</span>
                   </div>
                   <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-                    <button
+                    <span
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleMainCategoryClick(categoryKey);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleMainCategoryClick(categoryKey);
+                        }
+                      }}
                       className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                       title="Search this category"
                     >
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                    <svg 
-                      className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-200 ${
+                      <FiExternalLink className="w-3.5 h-3.5" />
+                    </span>
+                    <FiChevronRight 
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
                         openMenu === categoryKey ? 'rotate-90' : ''
                       }`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    />
                   </div>
                 </button>
                 
@@ -425,35 +424,37 @@ const Body: React.FC = () => {
                       <div key={subKey} className="border-l-2 border-gray-100 pl-3 sm:pl-4">
                         <button
                           type="button"
-                          className="flex items-center justify-between w-full p-2 sm:p-3 hover:bg-blue-50 rounded-lg transition-colors duration-200 group"
+                          className="flex items-center justify-between w-full p-2 hover:bg-blue-50 rounded-lg transition-colors duration-200 group"
                           onClick={() => toggleSubMenu(`${categoryKey}-${subKey}`)}
                           onDoubleClick={() => handleSubCategoryClick(categoryKey)}
                           title={`Click to expand, double-click to search ${subcategory.label}`}
                         >
                           <span className="font-medium text-xs sm:text-sm text-gray-700 group-hover:text-blue-600 transition-colors truncate">{subcategory.label}</span>
                           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-                            <button
+                            <span
+                              role="button"
+                              tabIndex={0}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleSubCategoryClick(categoryKey);
                               }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleSubCategoryClick(categoryKey);
+                                }
+                              }}
                               className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                               title="Search this subcategory"
                             >
-                              <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </button>
-                            <svg 
-                              className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ${
+                              <FiExternalLink className="w-3 h-3" />
+                            </span>
+                            <FiChevronRight 
+                              className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
                                 openSubMenu === `${categoryKey}-${subKey}` ? 'rotate-90' : ''
                               }`}
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            />
                           </div>
                         </button>
                         
@@ -463,7 +464,7 @@ const Body: React.FC = () => {
                               <li key={item.id}>
                                 <button
                                   type="button"
-                                  className={`w-full text-left p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200 group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 ${
+                                  className={`w-full text-left p-2 text-xs sm:text-sm rounded-lg transition-all duration-200 group hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 ${
                                     selectedCategory === item.id
                                       ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 font-semibold border border-blue-200'
                                       : 'text-gray-600 hover:text-gray-800 border border-transparent'
@@ -473,9 +474,7 @@ const Body: React.FC = () => {
                                 >
                                   <div className="flex items-center justify-between">
                                     <span className="group-hover:font-medium transition-all truncate pr-2">{item.label}</span>
-                                    <svg className="w-2 h-2 sm:w-3 sm:h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
+                                    <FiExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity flex-shrink-0" />
                                   </div>
                                 </button>
                               </li>
@@ -517,8 +516,8 @@ const Body: React.FC = () => {
         </aside>
 
         {/* Enhanced Image Slider */}
-        <div className="w-full lg:w-2/3 order-1 lg:order-2">
-          <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 group">
+        <div className="w-full flex-1 order-1 lg:order-2">
+          <div className="relative w-full h-[220px] sm:h-[260px] md:h-[310px] lg:h-[340px] overflow-hidden rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg hover:shadow-xl transition-shadow duration-300 group">
             {images.map((img, index) => (
               <img
                 key={img}
@@ -553,21 +552,17 @@ const Body: React.FC = () => {
             {/* Navigation arrows */}
             <button
               onClick={() => setCurrentIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
-              className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-1 sm:p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
+              className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 bg-white/25 hover:bg-white/45 backdrop-blur-sm text-white p-1.5 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
               aria-label="Previous slide"
             >
-              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={() => setCurrentIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
-              className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-1 sm:p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
+              className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-white/25 hover:bg-white/45 backdrop-blur-sm text-white p-1.5 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-30"
               aria-label="Next slide"
             >
-              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -575,10 +570,10 @@ const Body: React.FC = () => {
       
       {/* Selected Category Display */}
       {selectedCategory && (
-        <div className="mt-4 sm:mt-6 lg:mt-8 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl sm:rounded-2xl border border-blue-200 shadow-sm">
+        <div className="mt-4 sm:mt-5 lg:mt-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div>
-              <p className="text-blue-800 font-semibold text-sm sm:text-lg">
+              <p className="text-blue-800 font-semibold text-sm sm:text-base">
                 🎯 Selected Category: <span className="text-blue-600">{selectedCategory}</span>
               </p>
               <p className="text-blue-600 text-xs sm:text-sm mt-1">Click any category to search for products</p>

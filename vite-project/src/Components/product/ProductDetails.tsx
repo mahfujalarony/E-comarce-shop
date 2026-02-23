@@ -11,7 +11,7 @@ import Rating from '../ui/Rating';
 import { useAuth } from '../auth/AuthContext';
 import { toast } from 'react-toastify';
 
-import socket from '../../socket';
+import socket, { syncSocketAuthToken } from '../../socket';
 import NotFound from '../error/NotFound';
 
 interface Product {
@@ -202,6 +202,7 @@ const ProductDetails: React.FC = () => {
       toast.info('Please login first');
       return;
     }
+    syncSocketAuthToken(localStorage.getItem('token'));
 
     console.log('Starting chat for product:', { productId: id });
 

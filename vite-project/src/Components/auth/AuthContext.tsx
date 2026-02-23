@@ -1,4 +1,5 @@
 import React, { useEffect, createContext, useContext, useState } from "react";
+import { syncSocketAuthToken } from "../../socket";
 
 interface AuthData {
   name: string | null;
@@ -18,11 +19,6 @@ interface AuthContextType {
 }
 
 
-interface AuthContextType {
-  authData: AuthData;
-  setAuthData: React.Dispatch<React.SetStateAction<AuthData>>;
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,10 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
  // console.log("AuthProvider initialized with authData:", authData);
 
-   const logout = () => {
+  const logout = () => {
     // Clear localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    syncSocketAuthToken(null);
     
     // Reset auth state
     setAuthData({
@@ -60,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const validateToken = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
+        syncSocketAuthToken(null);
         setAuthData((prev) => ({
           ...prev,
           isAuthenticated: false,
@@ -82,6 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const data = await response.json();
+        localStorage.setItem("token", data.token || token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        syncSocketAuthToken(data.token || token);
         setAuthData({
           name: data.user.name || null,
           email: data.user.email || null,
@@ -95,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Error validating token:", error);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        syncSocketAuthToken(null);
         setAuthData({
           name: null,
           email: null,
@@ -110,6 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     validateToken();
   }, []);
+
+  useEffect(() => {
+    if (authData.token) {
+      syncSocketAuthToken(authData.token);
+    }
+  }, [authData.token]);
 
   return (
     <AuthContext.Provider value={{ authData, setAuthData, logout }}>
