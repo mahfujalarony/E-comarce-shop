@@ -43,6 +43,12 @@ const ProductList: React.FC = () => {
   const [timer] = useState(getDefaultTimer()); // Static timer for Bangladesh users
   const [showVerticalProducts, setShowVerticalProducts] = useState(false);
   const [horizontalScrollPosition, setHorizontalScrollPosition] = useState(0);
+  const [isWakeupNoticeDismissed, setIsWakeupNoticeDismissed] = useState(() => {
+    return localStorage.getItem('backendWakeupNoticeDismissed') === 'true';
+  });
+  const [isFirstSessionLoad, setIsFirstSessionLoad] = useState(() => {
+    return sessionStorage.getItem('backendWarmedUp') !== 'true';
+  });
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -86,6 +92,20 @@ const ProductList: React.FC = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+
+  useEffect(() => {
+    if (horizontalProducts.length > 0) {
+      sessionStorage.setItem('backendWarmedUp', 'true');
+      setIsFirstSessionLoad(false);
+    }
+  }, [horizontalProducts.length]);
+
+  const showWakeupStatus = horizontalLoading && isFirstSessionLoad;
+
+  const dismissWakeupNotice = () => {
+    localStorage.setItem('backendWakeupNoticeDismissed', 'true');
+    setIsWakeupNoticeDismissed(true);
+  };
 
   // Horizontal scroll position restore করুন
   useEffect(() => {
@@ -242,6 +262,32 @@ const ProductList: React.FC = () => {
   if (horizontalLoading) {
     return (
       <div className="px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-6 md:py-10">
+        {!isWakeupNoticeDismissed && (
+          <div className="mb-4 sm:mb-6 rounded-md border border-amber-200 bg-amber-50 p-3 sm:p-4 text-amber-900">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-xs sm:text-sm leading-relaxed">
+                ⚠️ নোট: আমাদের backend free hosting-এ চলছে। প্রথমবার ভিজিটে server wake-up হতে
+                20–60 সেকেন্ড লাগতে পারে। এরপর অ্যাপ স্বাভাবিকভাবে দ্রুত চলবে।
+              </p>
+              <button
+                type="button"
+                onClick={dismissWakeupNotice}
+                className="text-amber-800 hover:text-amber-950 text-base leading-none"
+                aria-label="Dismiss backend wake-up notice"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+        {showWakeupStatus && (
+          <div className="mb-4 sm:mb-6 rounded-md border border-blue-200 bg-blue-50 p-3 sm:p-4 text-blue-900">
+            <div className="flex items-center gap-2 text-sm sm:text-base font-medium">
+              <span className="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+              Waking up server...
+            </div>
+          </div>
+        )}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="h-5 sm:h-6 md:h-7 w-2 sm:w-2.5 md:w-3 bg-red-500"></div>
@@ -273,6 +319,24 @@ const ProductList: React.FC = () => {
 
   return (
     <div className="px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-6 md:py-10">
+      {!isWakeupNoticeDismissed && (
+        <div className="mb-4 sm:mb-6 rounded-md border border-amber-200 bg-amber-50 p-3 sm:p-4 text-amber-900">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-xs sm:text-sm leading-relaxed">
+              ⚠️ নোট: আমাদের backend free hosting-এ চলছে। প্রথমবার ভিজিটে server wake-up হতে
+              20–60 সেকেন্ড লাগতে পারে। এরপর অ্যাপ স্বাভাবিকভাবে দ্রুত চলবে।
+            </p>
+            <button
+              type="button"
+              onClick={dismissWakeupNotice}
+              className="text-amber-800 hover:text-amber-950 text-base leading-none"
+              aria-label="Dismiss backend wake-up notice"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header Section - More Responsive */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center space-x-2 sm:space-x-4">
