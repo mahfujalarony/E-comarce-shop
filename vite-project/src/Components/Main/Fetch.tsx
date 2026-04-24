@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { GoArrowRight } from 'react-icons/go';
 import { useNavigate } from 'react-router-dom';
@@ -95,17 +95,41 @@ const ProductList: React.FC = () => {
 
   useEffect(() => {
     if (horizontalProducts.length > 0) {
-      sessionStorage.setItem('backendWarmedUp', 'true');
-      setIsFirstSessionLoad(false);
+      setIsFirstSessionLoad((previous) => {
+        if (!previous) {
+          return false;
+        }
+        sessionStorage.setItem('backendWarmedUp', 'true');
+        return false;
+      });
     }
-  }, [horizontalProducts.length]);
+  }, [horizontalProducts]);
 
-  const showWakeupStatus = horizontalLoading && isFirstSessionLoad;
-
-  const dismissWakeupNotice = () => {
+  const dismissWakeupNotice = useCallback(() => {
     localStorage.setItem('backendWakeupNoticeDismissed', 'true');
     setIsWakeupNoticeDismissed(true);
-  };
+  }, []);
+
+  const wakeupNoticeBanner = useMemo(() => {
+    return isWakeupNoticeDismissed ? null : (
+      <div className="mb-4 sm:mb-6 rounded-md border border-amber-200 bg-amber-50 p-3 sm:p-4 text-amber-900">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-xs sm:text-sm leading-relaxed">
+            ⚠️ নোট: আমাদের backend free hosting-এ চলছে। প্রথমবার ভিজিটে server wake-up হতে
+            20–60 সেকেন্ড লাগতে পারে। এরপর অ্যাপ স্বাভাবিকভাবে দ্রুত চলবে।
+          </p>
+          <button
+            type="button"
+            onClick={dismissWakeupNotice}
+            className="text-amber-800 hover:text-amber-950 text-base leading-none"
+            aria-label="Dismiss backend wake-up notice"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    );
+  }, [dismissWakeupNotice, isWakeupNoticeDismissed]);
 
   // Horizontal scroll position restore করুন
   useEffect(() => {
@@ -262,25 +286,8 @@ const ProductList: React.FC = () => {
   if (horizontalLoading) {
     return (
       <div className="px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-6 md:py-10">
-        {!isWakeupNoticeDismissed && (
-          <div className="mb-4 sm:mb-6 rounded-md border border-amber-200 bg-amber-50 p-3 sm:p-4 text-amber-900">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-xs sm:text-sm leading-relaxed">
-                ⚠️ নোট: আমাদের backend free hosting-এ চলছে। প্রথমবার ভিজিটে server wake-up হতে
-                20–60 সেকেন্ড লাগতে পারে। এরপর অ্যাপ স্বাভাবিকভাবে দ্রুত চলবে।
-              </p>
-              <button
-                type="button"
-                onClick={dismissWakeupNotice}
-                className="text-amber-800 hover:text-amber-950 text-base leading-none"
-                aria-label="Dismiss backend wake-up notice"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-        {showWakeupStatus && (
+        {wakeupNoticeBanner}
+        {isFirstSessionLoad && (
           <div className="mb-4 sm:mb-6 rounded-md border border-blue-200 bg-blue-50 p-3 sm:p-4 text-blue-900">
             <div className="flex items-center gap-2 text-sm sm:text-base font-medium">
               <span className="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
@@ -319,24 +326,7 @@ const ProductList: React.FC = () => {
 
   return (
     <div className="px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-6 md:py-10">
-      {!isWakeupNoticeDismissed && (
-        <div className="mb-4 sm:mb-6 rounded-md border border-amber-200 bg-amber-50 p-3 sm:p-4 text-amber-900">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-xs sm:text-sm leading-relaxed">
-              ⚠️ নোট: আমাদের backend free hosting-এ চলছে। প্রথমবার ভিজিটে server wake-up হতে
-              20–60 সেকেন্ড লাগতে পারে। এরপর অ্যাপ স্বাভাবিকভাবে দ্রুত চলবে।
-            </p>
-            <button
-              type="button"
-              onClick={dismissWakeupNotice}
-              className="text-amber-800 hover:text-amber-950 text-base leading-none"
-              aria-label="Dismiss backend wake-up notice"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      {wakeupNoticeBanner}
       {/* Header Section - More Responsive */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center space-x-2 sm:space-x-4">
