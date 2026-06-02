@@ -115,8 +115,7 @@ const ProductList: React.FC = () => {
       <div className="mb-4 sm:mb-6 rounded-md border border-amber-200 bg-amber-50 p-3 sm:p-4 text-amber-900">
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs sm:text-sm leading-relaxed">
-            ⚠️ নোট: আমাদের backend free hosting-এ চলছে। প্রথমবার ভিজিটে server wake-up হতে
-            20–60 সেকেন্ড লাগতে পারে। এরপর অ্যাপ স্বাভাবিকভাবে দ্রুত চলবে।
+             Note: The backend is hosted on a free-tier service, so the first request may take 20–60 seconds while the server wakes up. After that, the application should perform normally.
           </p>
           <button
             type="button"
